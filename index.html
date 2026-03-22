@@ -43,12 +43,13 @@
     </section>
 
     <!-- PROJECTS -->
-   <section id="projects" class="wrap">
+
+    <section id="projects" class="wrap">
   <h2>Projects</h2>
 
   <article class="card">
     <h3>Real-time promo &amp; trial abuse detection</h3>
-    <p class="card-role">Fraud detection · Streaming systems</p>
+    <p class="card-role">Fraud detection &middot; Streaming systems</p>
     <div class="tag-row">
       <span class="tag">Kafka</span>
       <span class="tag">Spark Streaming</span>
@@ -56,7 +57,7 @@
       <span class="tag">PostgreSQL</span>
       <span class="tag">Docker</span>
     </div>
-    <p class="card-desc">Built a streaming pipeline that catches promo abuse in real time — trial hopping, payment reuse, card fingerprint collisions. Cooldown checks run across device, email, and card with audit logs stored in PostgreSQL.</p>
+    <p class="card-desc">Catches promo abuse in real time: trial hopping, payment reuse, and card fingerprint collisions. Cooldown checks run across device, email, and card signals with audit logs stored in PostgreSQL.</p>
     <div class="metric-row">
       <div class="metric"><span class="metric-val">Real-time</span><span class="metric-lbl">Detection</span></div>
       <div class="metric"><span class="metric-val">30–90d</span><span class="metric-lbl">Cooldown windows</span></div>
@@ -65,16 +66,16 @@
     <a class="btn" href="https://github.com/ujwalatripurana/promo-abuse-detection" target="_blank">View on GitHub</a>
   </article>
 
-<article class="card">
+ <article class="card">
     <h3>U.S. housing affordability: then and now</h3>
-    <p class="card-role">Data storytelling · Business analytics</p>
+    <p class="card-role">Data storytelling &middot; Business analytics</p>
     <div class="tag-row">
       <span class="tag">Tableau</span>
       <span class="tag">Python</span>
       <span class="tag">Pandas</span>
       <span class="tag">Matplotlib</span>
     </div>
-    <p class="card-desc">Combined 9 public datasets to show how housing affordability has shifted over 30 years across income groups and regions. Two Tableau dashboards with filters by state, year, and income tier.</p>
+    <p class="card-desc">Combined 9 public datasets to show how housing affordability shifted over 30 years across income groups and regions. Two Tableau dashboards with filters by state, year, and income tier.</p>
     <div class="metric-row">
       <div class="metric"><span class="metric-val">9+</span><span class="metric-lbl">Datasets</span></div>
       <div class="metric"><span class="metric-val">11</span><span class="metric-lbl">Visualizations</span></div>
@@ -82,17 +83,17 @@
     </div>
     <a class="btn" href="https://github.com/ujwalatripurana/us-housing-affordability" target="_blank">View on GitHub</a>
   </article>
-     
+      
   <article class="card">
     <h3>Causal uplift modeling for marketing optimization</h3>
-    <p class="card-role">Causal ML · Marketing analytics</p>
+    <p class="card-role">Causal ML &middot; Marketing analytics</p>
     <div class="tag-row">
       <span class="tag">CausalML</span>
       <span class="tag">Python</span>
       <span class="tag">Scikit-learn</span>
       <span class="tag">Criteo dataset</span>
     </div>
-    <p class="card-desc">Targeted users who actually respond to ads, not just who converts. T-learner and S-learner models on the Criteo dataset outperformed traditional targeting by 28%, with decision rules that automate targeting and flag edge cases for review.</p>
+    <p class="card-desc">Identifies users who actually respond to ads, not just who converts. T-learner and S-learner models beat traditional targeting by 28%, with decision rules that automate spend and flag edge cases for review.</p>
     <div class="metric-row">
       <div class="metric"><span class="metric-val">28%</span><span class="metric-lbl">Uplift vs baseline</span></div>
       <div class="metric"><span class="metric-val">18%</span><span class="metric-lbl">Less budget waste</span></div>
@@ -103,7 +104,7 @@
 
   <article class="card">
     <h3>ML-based crime hotspot prediction</h3>
-    <p class="card-role">Geospatial ML · Data engineering</p>
+    <p class="card-role">Geospatial ML &middot; Data engineering</p>
     <div class="tag-row">
       <span class="tag">Scikit-learn</span>
       <span class="tag">Apache Airflow</span>
@@ -112,7 +113,7 @@
       <span class="tag">KNN</span>
       <span class="tag">SVM</span>
     </div>
-    <p class="card-desc">Predicted crime hotspots from 100K+ records using spatial and temporal patterns. Random Forest, KNN, and SVM were benchmarked. The full retrain pipeline runs automatically on Airflow with BigQuery.</p>
+    <p class="card-desc">Predicted crime hotspots across neighborhoods using 100K+ records and spatial-temporal patterns. Full retrain pipeline runs automatically on Airflow with BigQuery. False positives cut by 12% through threshold tuning.</p>
     <div class="metric-row">
       <div class="metric"><span class="metric-val">100K+</span><span class="metric-lbl">Records</span></div>
       <div class="metric"><span class="metric-val">87%</span><span class="metric-lbl">Accuracy</span></div>
@@ -121,7 +122,6 @@
     </div>
     <a class="btn" href="https://github.com/ujwalatripurana/crime-hotspot-ml" target="_blank">View on GitHub</a>
   </article>
-
 
 </section>
 
