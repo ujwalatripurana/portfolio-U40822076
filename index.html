@@ -44,26 +44,199 @@
 
     <!-- PROJECTS -->
     <section id="projects" class="wrap">
-      <h2>Projects</h2>
+  <h2>Projects</h2>
 
-      <article class="card">
-        <h3>U.S. Housing Affordability: Then and Now</h3>
-        <p>
-          Integrated and analyzed 9+ datasets to examine trends in housing affordability across income groups and regions.
-          Built Tableau dashboards and 11+ visualizations to highlight disparities over time.
-        </p>
-        <a class="btn" href="https://github.com/ujwalatripurana06/us-housing-affordability" target="_blank">View Repository</a>
-      </article>
+  <!-- PROJECT 1: Promo Abuse Detection -->
+  <article class="card">
+    <div class="card-top">
+      <div>
+        <h3>Real-time promo &amp; trial abuse detection</h3>
+        <p class="card-role">Fraud detection &middot; Streaming systems</p>
+      </div>
+    </div>
+    <div class="tag-row">
+      <span class="tag">Kafka</span>
+      <span class="tag">Spark Streaming</span>
+      <span class="tag">Python</span>
+      <span class="tag">PostgreSQL</span>
+      <span class="tag">Docker</span>
+    </div>
+    <div class="metric-row">
+      <div class="metric">
+        <span class="metric-val">Real-time</span>
+        <span class="metric-lbl">Detection latency</span>
+      </div>
+      <div class="metric">
+        <span class="metric-val">30–90d</span>
+        <span class="metric-lbl">Cooldown windows</span>
+      </div>
+      <div class="metric">
+        <span class="metric-val">3</span>
+        <span class="metric-lbl">Signal types tracked</span>
+      </div>
+    </div>
+    <p class="card-desc">
+      Designed a real-time pipeline to detect promo abuse — trial hopping, payment reuse, and device fingerprint collisions — as transactions stream in. Implements cooldown and reuse checks across device ID, email hash, and card fingerprint using time-indexed audit-ready event logs in PostgreSQL. Built with Kafka for ingestion, Spark Structured Streaming for processing, and Docker for portable deployment.
+    </p>
+    <div class="btn-row">
+      <a class="btn" href="https://github.com/ujwalatripurana06/promo-abuse-detection" target="_blank">View on GitHub</a>
+    </div>
+  </article>
 
-      <article class="card">
-        <h3>Crime Hotspot Prediction using ML</h3>
-        <p>
-          Applied machine learning on 980,000+ crime records to detect spatial-temporal patterns, achieving 87% accuracy.
-          Automated retraining with Airflow and integrated BigQuery for scalable analytics.
-        </p>
-        <a class="btn" href="https://github.com/ujwalatripurana06/crime-hotspot-ml" target="_blank">View Repository</a>
-      </article>
-    </section>
+  <!-- PROJECT 2: Causal Uplift Modeling -->
+  <article class="card">
+    <div class="card-top">
+      <div>
+        <h3>Causal uplift modeling for marketing optimization</h3>
+        <p class="card-role">Causal ML &middot; Marketing analytics</p>
+      </div>
+      <span class="card-badge badge-purple">Notebook</span>
+    </div>
+    <div class="tag-row">
+      <span class="tag">CausalML</span>
+      <span class="tag">Python</span>
+      <span class="tag">Scikit-learn</span>
+      <span class="tag">Criteo dataset</span>
+    </div>
+    <div class="metric-row">
+      <div class="metric">
+        <span class="metric-val">28%</span>
+        <span class="metric-lbl">Uplift vs baseline</span>
+      </div>
+      <div class="metric">
+        <span class="metric-val">18%</span>
+        <span class="metric-lbl">Budget waste reduced</span>
+      </div>
+      <div class="metric">
+        <span class="metric-val">$240K</span>
+        <span class="metric-lbl">Modeled annual uplift</span>
+      </div>
+    </div>
+    <p class="card-desc">
+      Built a causal inference pipeline to identify which users actually respond to marketing — not just who converts. Trained T-learner and S-learner models on the Criteo Uplift Dataset using CausalML, achieving 28% improvement over traditional propensity-based targeting. Designed AI-driven decision rules combining bias-adjusted model outputs with thresholds to trigger automated targeting actions and flag edge cases for human review. Estimated 18% reduction in budget wastage with a modeled ~$240K annualized profitability uplift.
+    </p>
+    <div class="btn-row">
+      <a class="btn" href="https://github.com/ujwalatripurana06/causal-uplift-modeling" target="_blank">View on GitHub</a>
+      <a class="btn btn-accent" href="YOUR_NBVIEWER_LINK_HERE" target="_blank">View notebook &rarr;</a>
+    </div>
+  </article>
+
+  <!-- PROJECT 3: Crime Hotspot Prediction -->
+  <article class="card">
+    <div class="card-top">
+      <div>
+        <h3>ML-based crime hotspot prediction</h3>
+        <p class="card-role">Geospatial ML &middot; Data engineering</p>
+      </div>
+      <span class="card-badge badge-teal">Live demo</span>
+    </div>
+    <div class="tag-row">
+      <span class="tag">Scikit-learn</span>
+      <span class="tag">Apache Airflow</span>
+      <span class="tag">BigQuery</span>
+      <span class="tag">Random Forest</span>
+      <span class="tag">KNN</span>
+      <span class="tag">SVM</span>
+    </div>
+    <div class="metric-row">
+      <div class="metric">
+        <span class="metric-val">100K+</span>
+        <span class="metric-lbl">Crime records</span>
+      </div>
+      <div class="metric">
+        <span class="metric-val">87%</span>
+        <span class="metric-lbl">Accuracy</span>
+      </div>
+      <div class="metric">
+        <span class="metric-val">0.84</span>
+        <span class="metric-lbl">F1 score</span>
+      </div>
+      <div class="metric">
+        <span class="metric-val">&minus;12%</span>
+        <span class="metric-lbl">False positives</span>
+      </div>
+    </div>
+    <p class="card-desc">
+      Analyzed 100K+ crime records to uncover spatial and temporal patterns across neighborhoods. Benchmarked Random Forest, KNN, and SVM classifiers — achieving 87% accuracy and 0.84 F1-score. Automated the full MLOps loop using Apache Airflow and Google BigQuery: data ingestion, feature engineering, model retraining, and evaluation. Reduced false positives by 12% through iterative threshold tuning.
+    </p>
+    <div class="btn-row">
+      <a class="btn" href="https://github.com/ujwalatripurana06/crime-hotspot-ml" target="_blank">View on GitHub</a>
+      <a class="btn btn-accent" href="YOUR_STREAMLIT_LINK_HERE" target="_blank">Live demo &rarr;</a>
+    </div>
+  </article>
+
+  <!-- PROJECT 4: U.S. Housing Affordability -->
+  <article class="card">
+    <div class="card-top">
+      <div>
+        <h3>U.S. housing affordability: then and now</h3>
+        <p class="card-role">Data storytelling &middot; Business analytics</p>
+      </div>
+    </div>
+    <div class="tag-row">
+      <span class="tag">Tableau</span>
+      <span class="tag">Python</span>
+      <span class="tag">Pandas</span>
+      <span class="tag">Matplotlib</span>
+    </div>
+    <div class="metric-row">
+      <div class="metric">
+        <span class="metric-val">9+</span>
+        <span class="metric-lbl">Datasets integrated</span>
+      </div>
+      <div class="metric">
+        <span class="metric-val">11</span>
+        <span class="metric-lbl">Visualizations</span>
+      </div>
+      <div class="metric">
+        <span class="metric-val">2</span>
+        <span class="metric-lbl">Tableau dashboards</span>
+      </div>
+    </div>
+    <p class="card-desc">
+      Integrated 9+ public datasets (Census, HUD, FRED, Zillow) to analyze how housing affordability has shifted across income brackets, regions, and housing types over three decades. Built interactive Tableau dashboards exposing the widening gap between median income and home prices across major U.S. metros, with filters by state, year, and household income tier.
+    </p>
+    <div class="btn-row">
+      <a class="btn" href="https://github.com/ujwalatripurana06/us-housing-affordability" target="_blank">View on GitHub</a>
+      <a class="btn btn-accent" href="YOUR_TABLEAU_PUBLIC_LINK_HERE" target="_blank">View dashboard &rarr;</a>
+    </div>
+  </article>
+
+  <!-- PROJECT 5: Lung Cancer Cost Prediction -->
+  <article class="card">
+    <div class="card-top">
+      <div>
+        <h3>Financial planning for lung cancer patients</h3>
+        <p class="card-role">Healthcare ML &middot; Cost prediction &middot; Omdena</p>
+      </div>
+    </div>
+    <div class="tag-row">
+      <span class="tag">Scikit-learn</span>
+      <span class="tag">Python</span>
+      <span class="tag">SQL</span>
+      <span class="tag">Power BI</span>
+      <span class="tag">MongoDB</span>
+      <span class="tag">AWS</span>
+    </div>
+    <div class="metric-row">
+      <div class="metric">
+        <span class="metric-val">R&sup2; = 0.83</span>
+        <span class="metric-lbl">Model accuracy</span>
+      </div>
+      <div class="metric">
+        <span class="metric-val">50</span>
+        <span class="metric-lbl">Global team members</span>
+      </div>
+    </div>
+    <p class="card-desc">
+      Collaborated with a 50-member global team at Omdena to build ML models forecasting treatment costs for lung cancer patients, enabling scenario analysis and informed financial planning under uncertainty. Cleaned and explored large healthcare datasets in Python and SQL, built predictive models achieving R&sup2; = 0.83, and developed Power BI dashboards integrating MongoDB data with AWS workflows.
+    </p>
+    <div class="btn-row">
+      <a class="btn" href="https://github.com/ujwalatripurana06/lung-cancer-cost-prediction" target="_blank">View on GitHub</a>
+    </div>
+  </article>
+
+</section>
 
     <!-- SKILLS -->
     <section id="skills" class="wrap">
