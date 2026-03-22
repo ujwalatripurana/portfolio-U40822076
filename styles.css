@@ -170,34 +170,35 @@ footer {
 
 .metric-row {
   display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
+  flex-direction: row;
+  gap: 0.5rem;
+  flex-wrap: wrap;
   margin-bottom: 1rem;
 }
 
 .metric {
+  flex: 1;
+  min-width: 80px;
+  background: #fdf9ff;
+  border: 1px solid #ede0fb;
+  border-radius: 10px;
+  padding: 0.55rem 0.5rem;
+  text-align: center;
   display: flex;
-  align-items: baseline;
-  gap: 0.5rem;
-  padding: 0.3rem 0;
-  border-bottom: 1px solid #f0e6fa;
-  background: none;
-  border-radius: 0;
-  border-left: none;
-  border-right: none;
-  border-top: none;
+  flex-direction: column;
+  gap: 3px;
 }
 
 .metric-val {
   font-size: 0.9rem;
   font-weight: 700;
   color: #111111;
-  white-space: nowrap;
-  min-width: 90px;
 }
 
 .metric-lbl {
-  font-size: 0.85rem;
-  color: #666666;
-  font-weight: 400;
+  font-size: 0.65rem;
+  color: #9333ea;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  line-height: 1.3;
 }
