@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Promo Abuse Detector — Ujwala Tripurana</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&family=Instrument+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #03050a;
+  --bg2: #060c14;
+  --surface: rgba(255,255,255,0.03);
+  --surface2: rgba(255,255,255,0.06);
+  --border: rgba(255,85,0,0.18);
+  --border-sub: rgba(255,255,255,0.07);
+  --text: #eef0f6;
+  --muted: #6b7a91;
+  --orange: #ff5500;
+  --orange-dim: rgba(255,85,0,0.10);
+  --orange-glow: rgba(255,85,0,0.25);
+  --green: #00e878;
+  --green-dim: rgba(0,232,120,0.10);
+  --yellow: #ffd166;
+  --red: #ff3b5c;
+  --blue: #4fc3f7;
+  --radius: 12px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Instrument Sans',sans-serif;font-size:16px;line-height:1.65;overflow-x:hidden}
+
+/* ── Progress ── */
+#prog{position:fixed;top:0;left:0;height:2px;width:0%;background:linear-gradient(90deg,var(--orange),var(--yellow));z-index:999}
+
+/* ── Nav ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:900;height:58px;display:flex;align-items:center;padding:0 2rem;justify-content:space-between;transition:background .3s;border-bottom:1px solid transparent}
+nav.scrolled{background:rgba(3,5,10,.92);backdrop-filter:blur(20px);border-color:var(--border-sub)}
+.nav-back{display:flex;align-items:center;gap:.5rem;color:var(--muted);text-decoration:none;font-size:.82rem;font-weight:500;transition:color .2s;letter-spacing:.02em}
+.nav-back:hover{color:var(--orange)}
+.nav-back:hover svg{transform:translateX(-3px)}
+.nav-back svg{transition:transform .2s}
+.nav-tag{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--orange);letter-spacing:.12em;border:1px solid var(--border);padding:.28rem .75rem;border-radius:999px;background:var(--orange-dim);text-transform:uppercase}
+
+/* ── Hero ── */
+#hero{min-height:100vh;display:grid;align-items:center;padding:90px 2rem 5rem;position:relative;overflow:hidden}
+.hero-noise{position:absolute;inset:0;opacity:.025;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");background-size:200px}
+.hero-rays{position:absolute;inset:0;background:conic-gradient(from 200deg at 65% 40%, transparent 0deg, rgba(255,85,0,.04) 15deg, transparent 30deg, transparent 120deg, rgba(255,85,0,.03) 135deg, transparent 150deg);pointer-events:none}
+.hero-wrap{max-width:1100px;margin:0 auto;width:100%;position:relative;z-index:1;display:grid;grid-template-columns:1fr 420px;gap:4rem;align-items:center}
+@media(max-width:860px){.hero-wrap{grid-template-columns:1fr;gap:3rem}}
+
+.hero-left{}
+.hero-kicker{font-family:'JetBrains Mono',monospace;font-size:.68rem;letter-spacing:.22em;color:var(--orange);text-transform:uppercase;margin-bottom:1.5rem;opacity:0;animation:fadeUp .7s .15s both;display:flex;align-items:center;gap:.75rem}
+.hero-kicker::before{content:'';display:inline-block;width:28px;height:1px;background:var(--orange)}
+h1{font-family:'Syne',sans-serif;font-size:clamp(2.8rem,6.5vw,5.2rem);font-weight:800;line-height:.95;letter-spacing:-.04em;margin-bottom:1.5rem;opacity:0;animation:fadeUp .8s .28s both}
+h1 .line2{color:var(--orange)}
+h1 .line3{color:var(--muted);font-weight:400;font-size:.6em;display:block;margin-top:.4rem;letter-spacing:-.01em;line-height:1.4}
+.hero-desc{font-size:1rem;color:var(--muted);max-width:520px;margin-bottom:2.5rem;line-height:1.8;opacity:0;animation:fadeUp .7s .42s both}
+.hero-desc strong{color:var(--text);font-weight:500}
+.hero-pills{display:flex;gap:.75rem;flex-wrap:wrap;opacity:0;animation:fadeUp .7s .55s both}
+.pill{font-family:'JetBrains Mono',monospace;font-size:.65rem;letter-spacing:.08em;padding:.3rem .8rem;border-radius:999px;border:1px solid}
+.pill-orange{color:var(--orange);border-color:var(--border);background:var(--orange-dim)}
+.pill-green{color:var(--green);border-color:rgba(0,232,120,.2);background:var(--green-dim)}
+.pill-blue{color:var(--blue);border-color:rgba(79,195,247,.2);background:rgba(79,195,247,.07)}
+
+/* ── Live Sim Panel ── */
+.sim-panel{background:var(--bg2);border:1px solid var(--border-sub);border-radius:var(--radius);overflow:hidden;opacity:0;animation:fadeUp .9s .5s both;position:relative}
+.sim-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--orange),transparent)}
+.sim-header{padding:.75rem 1.1rem;border-bottom:1px solid var(--border-sub);display:flex;align-items:center;justify-content:space-between}
+.sim-title-row{display:flex;align-items:center;gap:.6rem}
+.sim-dots{display:flex;gap:.38rem}
+.sim-dot{width:9px;height:9px;border-radius:50%}
+.sim-dot:nth-child(1){background:#ff5f57}
+.sim-dot:nth-child(2){background:#febc2e}
+.sim-dot:nth-child(3){background:#28c840}
+.sim-label{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--muted);letter-spacing:.1em}
+.sim-badge{display:flex;align-items:center;gap:.4rem;font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--green);letter-spacing:.08em}
+.sim-pulse{width:6px;height:6px;background:var(--green);border-radius:50%;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(0,232,120,.4)}50%{opacity:.6;box-shadow:0 0 0 6px rgba(0,232,120,0)}}
+
+.sim-feed{height:240px;overflow:hidden;padding:.5rem 0;position:relative}
+.sim-feed-inner{display:flex;flex-direction:column;gap:0}
+.event-row{display:flex;align-items:center;gap:.7rem;padding:.42rem 1.1rem;font-family:'JetBrains Mono',monospace;font-size:.68rem;transition:background .2s;animation:slideIn .25s ease both;border-left:2px solid transparent}
+.event-row.normal{border-color:transparent;color:var(--muted)}
+.event-row.alert{border-color:var(--orange);background:rgba(255,85,0,.06);color:var(--text);animation:alertFlash .3s ease both}
+@keyframes slideIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+@keyframes alertFlash{0%{background:rgba(255,85,0,.25)}100%{background:rgba(255,85,0,.06)}}
+.ev-time{color:var(--muted);width:70px;flex-shrink:0;font-size:.6rem}
+.ev-device{width:64px;flex-shrink:0}
+.ev-device.abusive{color:var(--orange)}
+.ev-device.normal{color:var(--blue)}
+.ev-user{color:var(--muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ev-badge{font-size:.58rem;padding:.15rem .5rem;border-radius:999px;flex-shrink:0}
+.ev-badge.alert{background:rgba(255,85,0,.2);color:var(--orange);border:1px solid rgba(255,85,0,.3)}
+.ev-badge.ok{background:rgba(0,232,120,.1);color:var(--green);border:1px solid rgba(0,232,120,.2)}
+
+.sim-stats{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--border-sub)}
+.ss-item{padding:.7rem 1rem;display:flex;flex-direction:column;gap:.2rem;border-right:1px solid var(--border-sub)}
+.ss-item:last-child{border-right:none}
+.ss-val{font-family:'JetBrains Mono',monospace;font-size:1.2rem;font-weight:500;line-height:1}
+.ss-val.orange{color:var(--orange)}
+.ss-val.green{color:var(--green)}
+.ss-val.blue{color:var(--blue)}
+.ss-key{font-size:.6rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-top:.15rem}
+
+/* ── Sections ── */
+section{padding:6rem 2rem}
+.wrap{max-width:1000px;margin:0 auto}
+.sec-label{font-family:'JetBrains Mono',monospace;font-size:.62rem;letter-spacing:.22em;color:var(--orange);text-transform:uppercase;margin-bottom:.75rem;display:flex;align-items:center;gap:.6rem}
+.sec-label::before{content:'';display:inline-block;width:18px;height:1px;background:var(--orange)}
+h2{font-family:'Syne',sans-serif;font-size:clamp(1.9rem,4vw,3rem);font-weight:800;letter-spacing:-.035em;line-height:1.05;margin-bottom:1.5rem}
+h2 em{font-style:italic;font-weight:400;color:var(--orange)}
+.body-text{color:var(--muted);font-size:.98rem;line-height:1.85;max-width:660px}
+.body-text strong{color:var(--text);font-weight:500}
+.alt{background:var(--bg2)}
+
+/* ── Architecture flow ── */
+.arch-flow{margin-top:3rem;position:relative}
+.arch-row{display:flex;align-items:center;gap:0;flex-wrap:nowrap;overflow-x:auto;padding-bottom:.5rem}
+.arch-node{background:var(--surface2);border:1px solid var(--border-sub);border-radius:var(--radius);padding:1.25rem 1.5rem;min-width:148px;flex-shrink:0;transition:border-color .3s,transform .3s}
+.arch-node:hover{border-color:var(--border);transform:translateY(-3px)}
+.arch-node-icon{font-size:1.5rem;margin-bottom:.5rem}
+.arch-node-name{font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem;margin-bottom:.25rem}
+.arch-node-desc{font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--muted);line-height:1.5}
+.arch-node.kafka .arch-node-name{color:#f59e0b}
+.arch-node.spark .arch-node-name{color:#e25822}
+.arch-node.pg .arch-node-name{color:#4fc3f7}
+.arch-arrow{display:flex;align-items:center;padding:0 .5rem;flex-shrink:0;opacity:.5}
+.arch-arrow svg{color:var(--orange)}
+.arch-detail{margin-top:2rem;display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem}
+@media(max-width:720px){.arch-detail{grid-template-columns:1fr}}
+.arch-card{background:var(--surface);border:1px solid var(--border-sub);border-radius:var(--radius);padding:1.25rem;transition:border-color .3s}
+.arch-card:hover{border-color:var(--border)}
+.arch-card-label{font-family:'JetBrains Mono',monospace;font-size:.6rem;text-transform:uppercase;letter-spacing:.12em;margin-bottom:.6rem}
+.arch-card-label.orange{color:var(--orange)}
+.arch-card-label.green{color:var(--green)}
+.arch-card-label.blue{color:var(--blue)}
+.arch-card-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;margin-bottom:.4rem}
+.arch-card-body{font-size:.82rem;color:var(--muted);line-height:1.7}
+.arch-card-body code{font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--text);background:rgba(255,255,255,.06);padding:.1rem .35rem;border-radius:4px}
+
+/* ── Metrics grid ── */
+.metrics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-top:2.5rem}
+@media(max-width:800px){.metrics-grid{grid-template-columns:repeat(2,1fr)}}
+.metric-card{background:var(--surface);border:1px solid var(--border-sub);border-radius:var(--radius);padding:1.5rem;transition:border-color .3s,transform .3s;position:relative;overflow:hidden}
+.metric-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--accent-color,var(--orange));transform:scaleX(0);transform-origin:left;transition:transform .4s}
+.metric-card:hover{border-color:var(--border);transform:translateY(-3px)}
+.metric-card:hover::after{transform:scaleX(1)}
+.metric-val{font-family:'Syne',sans-serif;font-size:2.2rem;font-weight:800;line-height:1;margin-bottom:.4rem}
+.metric-label{font-size:.75rem;color:var(--muted);line-height:1.5}
+.metric-sub{font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--muted);margin-top:.5rem;opacity:.7}
+
+/* ── Alert flow diagram ── */
+.alert-flow{background:var(--surface);border:1px solid var(--border-sub);border-radius:var(--radius);padding:2rem;margin-top:2.5rem;overflow:hidden}
+.af-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1.1rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:.75rem}
+.af-title span{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--muted);font-weight:400}
+.af-row{display:flex;gap:0;align-items:stretch;overflow-x:auto;padding-bottom:.5rem}
+.af-step{display:flex;flex-direction:column;align-items:center;flex:1;min-width:100px}
+.af-step-box{width:100%;background:var(--bg2);border:1px solid var(--border-sub);border-radius:8px;padding:.9rem .75rem;text-align:center;font-size:.75rem;color:var(--text);font-weight:500;position:relative;transition:border-color .3s}
+.af-step-box.active{border-color:var(--orange);background:rgba(255,85,0,.05)}
+.af-step-box.alert-step{border-color:var(--red);background:rgba(255,59,92,.06);color:var(--red)}
+.af-step-label{font-family:'JetBrains Mono',monospace;font-size:.58rem;color:var(--muted);margin-top:.5rem;text-align:center}
+.af-connector{display:flex;align-items:center;padding:0 .3rem;color:var(--muted);font-size:.8rem;flex-shrink:0;padding-top:0;margin-top:-1rem}
+.af-connector svg{opacity:.4}
+
+/* ── Window viz ── */
+.window-viz{margin-top:2rem}
+.wv-title{font-family:'JetBrains Mono',monospace;font-size:.68rem;color:var(--muted);margin-bottom:.75rem;text-transform:uppercase;letter-spacing:.1em}
+.wv-track{position:relative;height:52px;background:rgba(255,255,255,.03);border-radius:6px;overflow:hidden;border:1px solid var(--border-sub)}
+.wv-window{position:absolute;height:100%;background:rgba(79,195,247,.1);border:1px solid rgba(79,195,247,.3);border-radius:4px;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--blue);transition:all .3s}
+.wv-event{position:absolute;top:50%;transform:translateY(-50%);width:8px;height:8px;border-radius:50%;cursor:pointer;transition:transform .2s}
+.wv-event:hover{transform:translateY(-50%) scale(1.5)}
+.wv-event.normal{background:var(--green)}
+.wv-event.abusive{background:var(--orange);box-shadow:0 0 8px var(--orange-glow)}
+.wv-axis{display:flex;justify-content:space-between;margin-top:.4rem}
+.wv-axis span{font-family:'JetBrains Mono',monospace;font-size:.58rem;color:var(--muted)}
+
+/* ── Code block ── */
+.code-block{background:#060c14;border:1px solid var(--border-sub);border-radius:var(--radius);overflow:hidden;margin-top:1.5rem}
+.cb-header{padding:.6rem 1rem;background:rgba(255,255,255,.03);border-bottom:1px solid var(--border-sub);display:flex;align-items:center;justify-content:space-between}
+.cb-filename{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--muted)}
+.cb-lang{font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--orange);letter-spacing:.08em}
+.cb-body{padding:1.25rem;overflow-x:auto}
+.cb-body pre{font-family:'JetBrains Mono',monospace;font-size:.72rem;line-height:1.7;color:#8892a4}
+.cb-body .kw{color:#c792ea}
+.cb-body .fn{color:#82aaff}
+.cb-body .str{color:#c3e88d}
+.cb-body .num{color:#f78c6c}
+.cb-body .cm{color:#546e7a;font-style:italic}
+.cb-body .var{color:var(--text)}
+.cb-body .op{color:var(--orange)}
+
+/* ── Conclusion ── */
+.concl-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-top:2rem}
+@media(max-width:650px){.concl-grid{grid-template-columns:1fr}}
+.concl-card{background:var(--surface);border:1px solid var(--border-sub);border-radius:var(--radius);padding:1.5rem;transition:border-color .3s,transform .2s}
+.concl-card:hover{border-color:var(--border);transform:translateY(-2px)}
+.concl-icon{font-size:1.25rem;margin-bottom:.6rem}
+.concl-title{font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem;margin-bottom:.4rem}
+.concl-body{font-size:.82rem;color:var(--muted);line-height:1.7}
+
+/* ── Footer ── */
+footer{border-top:1px solid var(--border-sub);padding:2rem;display:flex;justify-content:space-between;align-items:center;font-size:.8rem;color:var(--muted);flex-wrap:wrap;gap:1rem}
+.footer-links{display:flex;gap:1.5rem}
+.footer-links a{color:var(--muted);text-decoration:none;transition:color .2s}
+.footer-links a:hover{color:var(--orange)}
+
+/* ── Fade-up ── */
+.fade-up{opacity:0;transform:translateY(24px);transition:opacity .7s cubic-bezier(.4,0,.2,1),transform .7s cubic-bezier(.4,0,.2,1)}
+.fade-up.visible{opacity:1;transform:none}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:rgba(255,85,0,.2);border-radius:999px}
+::selection{background:rgba(255,85,0,.25)}
+</style>
+</head>
+<body>
+
+<div id="prog"></div>
+
+<nav id="navbar">
+  <a href="index.html" class="nav-back">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M5 12l7-7M5 12l7 7"/></svg>
+    Back to Portfolio
+  </a>
+  <span class="nav-tag">Streaming Systems</span>
+</nav>
+
+<!-- ═══ HERO ═══ -->
+<section id="hero">
+  <div class="hero-noise"></div>
+  <div class="hero-rays"></div>
+  <div class="hero-wrap">
+    <div class="hero-left">
+      <div class="hero-kicker">Real-Time Fraud Detection · Kafka + Spark + Postgres</div>
+      <h1>
+        Free trials<br>
+        <span class="line2">don't stay free</span>
+        <span class="line3">when abuse is caught<br>at the source.</span>
+      </h1>
+      <p class="hero-desc">
+        A production-grade streaming pipeline that catches promo abuse — same device, multiple "new" accounts — before it drains marketing budget. Events flow from <strong>Kafka → Spark → Postgres</strong> with sub-second alert latency, fully dockerized and fault-tolerant.
+      </p>
+      <div class="hero-pills">
+        <span class="pill pill-orange">Apache Kafka</span>
+        <span class="pill pill-orange">Spark Streaming</span>
+        <span class="pill pill-blue">PostgreSQL</span>
+        <span class="pill pill-green">Docker · Dockerized</span>
+        <span class="pill pill-blue">24h Tumbling Window</span>
+        <span class="pill pill-orange">Exactly-Once Semantics</span>
+      </div>
+    </div>
+
+    <!-- Live Event Feed Simulation -->
+    <div class="sim-panel">
+      <div class="sim-header">
+        <div class="sim-title-row">
+          <div class="sim-dots">
+            <div class="sim-dot"></div><div class="sim-dot"></div><div class="sim-dot"></div>
+          </div>
+          <span class="sim-label">signup-events · live feed</span>
+        </div>
+        <div class="sim-badge">
+          <div class="sim-pulse"></div>
+          STREAMING
+        </div>
+      </div>
+      <div class="sim-feed">
+        <div class="sim-feed-inner" id="feedInner"></div>
+      </div>
+      <div class="sim-stats">
+        <div class="ss-item">
+          <div class="ss-val green" id="stat-total">0</div>
+          <div class="ss-key">Events Seen</div>
+        </div>
+        <div class="ss-item">
+          <div class="ss-val orange" id="stat-alerts">0</div>
+          <div class="ss-key">Alerts Fired</div>
+        </div>
+        <div class="ss-item">
+          <div class="ss-val blue" id="stat-devices">0</div>
+          <div class="ss-key">Unique Devices</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ THE PROBLEM ═══ -->
+<section class="alt">
+  <div class="wrap">
+    <div class="sec-label fade-up">The Problem</div>
+    <h2 class="fade-up">One person.<br><em>Infinite free trials.</em></h2>
+    <p class="body-text fade-up">Promo abuse is low-effort, high-reward fraud. A single actor creates dozens of "new" accounts from the same device — or swaps payment tokens — to repeatedly claim free trials, referral bonuses, and first-time discounts. Traditional batch detection catches it <strong>days later</strong>, after the damage is done. By then, the promo budget is gone and the data is noisy.</p>
+
+    <div class="metrics-grid fade-up">
+      <div class="metric-card" style="--accent-color:var(--orange)">
+        <div class="metric-val" style="color:var(--orange)">10</div>
+        <div class="metric-label">Signups per device threshold<br>in a 24-hour window</div>
+        <div class="metric-sub">DEFAULT THRESHOLD</div>
+      </div>
+      <div class="metric-card" style="--accent-color:var(--green)">
+        <div class="metric-val" style="color:var(--green)">&lt;1s</div>
+        <div class="metric-label">Alert latency from first<br>event to Postgres write</div>
+        <div class="metric-sub">MICRO-BATCH</div>
+      </div>
+      <div class="metric-card" style="--accent-color:var(--blue)">
+        <div class="metric-val" style="color:var(--blue)">24h</div>
+        <div class="metric-label">Rolling tumbling window<br>with 24h watermark</div>
+        <div class="metric-sub">WINDOW SIZE</div>
+      </div>
+      <div class="metric-card" style="--accent-color:var(--yellow)">
+        <div class="metric-val" style="color:var(--yellow)">1×</div>
+        <div class="metric-label">Exactly-once semantics<br>via Spark checkpointing</div>
+        <div class="metric-sub">DELIVERY GUARANTEE</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ ARCHITECTURE ═══ -->
+<section>
+  <div class="wrap">
+    <div class="sec-label fade-up">Architecture</div>
+    <h2 class="fade-up">Three layers.<br><em>One clean story.</em></h2>
+    <p class="body-text fade-up">Each component solves exactly one problem. Kafka absorbs burst traffic and guarantees per-device ordering. Spark handles stateful windowed aggregation with late-event tolerance. Postgres surfaces actionable, explainable alerts ready for dashboards or downstream automation.</p>
+
+    <div class="arch-flow fade-up">
+      <div class="arch-row">
+        <div class="arch-node kafka">
+          <div class="arch-node-icon">⚡</div>
+          <div class="arch-node-name">Kafka</div>
+          <div class="arch-node-desc">signup-events<br>keyed by device_id<br>port 9092/9094</div>
+        </div>
+        <div class="arch-arrow">
+          <svg width="28" height="16" viewBox="0 0 28 16"><path d="M0 8h22M16 2l8 6-8 6" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+        </div>
+        <div class="arch-node spark">
+          <div class="arch-node-icon">🔥</div>
+          <div class="arch-node-name">Spark</div>
+          <div class="arch-node-desc">Structured Streaming<br>24h window + watermark<br>groupBy device_id</div>
+        </div>
+        <div class="arch-arrow">
+          <svg width="28" height="16" viewBox="0 0 28 16"><path d="M0 8h22M16 2l8 6-8 6" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+        </div>
+        <div class="arch-node pg">
+          <div class="arch-node-icon">🗄️</div>
+          <div class="arch-node-name">Postgres</div>
+          <div class="arch-node-desc">signups (raw + JSONB)<br>alerts (deduped)<br>ON CONFLICT upsert</div>
+        </div>
+      </div>
+
+      <div class="arch-detail">
+        <div class="arch-card">
+          <div class="arch-card-label orange">Ingest Layer</div>
+          <div class="arch-card-title">Kafka Producer</div>
+          <div class="arch-card-body">Events keyed by <code>device_id</code> for per-device ordering. Exposes <code>localhost:9094</code> to host, <code>kafka:9092</code> inside Docker network. <code>acks=all</code>, 10 retries — no event dropped.</div>
+        </div>
+        <div class="arch-card">
+          <div class="arch-card-label" style="color:#e25822">Processing Layer</div>
+          <div class="arch-card-title">Spark Structured Streaming</div>
+          <div class="arch-card-body">Parses JSON, applies <code>withWatermark("ts","24h")</code>, groups by <code>device_id + window</code>, counts. Emits alert when <code>count ≥ THRESHOLD</code>. Checkpoint on both sinks.</div>
+        </div>
+        <div class="arch-card">
+          <div class="arch-card-label blue">Storage Layer</div>
+          <div class="arch-card-title">PostgreSQL</div>
+          <div class="arch-card-body">Raw signups with <code>JSONB</code> for full audit trail. Alerts deduplicated via <code>UNIQUE(device_id, window_start, window_end)</code>. <code>ON CONFLICT DO UPDATE</code> handles micro-batch re-delivery.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ HOW IT WORKS ═══ -->
+<section class="alt">
+  <div class="wrap">
+    <div class="sec-label fade-up">Detection Logic</div>
+    <h2 class="fade-up">The window<br><em>remembers everything.</em></h2>
+    <p class="body-text fade-up">Every signup event carries a <code style="font-family:'JetBrains Mono',monospace;font-size:.85em;color:var(--text);background:rgba(255,255,255,.06);padding:.1em .3em;border-radius:4px">device_id</code> — a stable fingerprint that survives account deletion. Spark maintains a 24-hour tumbling window per device. The moment that window's count crosses the threshold, an alert record is written with full forensic context: window bounds, first/last seen timestamps, signup count.</p>
+
+    <!-- Alert lifecycle flow -->
+    <div class="alert-flow fade-up">
+      <div class="af-title">Alert Lifecycle <span>from raw event → actionable alert</span></div>
+      <div class="af-row">
+        <div class="af-step">
+          <div class="af-step-box">📨 Signup Event<br><small style="color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:.58rem">user_id + device_id<br>+ timestamp</small></div>
+          <div class="af-step-label">Producer</div>
+        </div>
+        <div class="af-connector"><svg width="20" height="12" viewBox="0 0 20 12"><path d="M0 6h14M10 2l6 4-6 4" stroke="currentColor" stroke-width="1.5" fill="none"/></svg></div>
+        <div class="af-step">
+          <div class="af-step-box active">🔑 Kafka Topic<br><small style="color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:.58rem">keyed by device_id<br>ordered delivery</small></div>
+          <div class="af-step-label">Kafka</div>
+        </div>
+        <div class="af-connector"><svg width="20" height="12" viewBox="0 0 20 12"><path d="M0 6h14M10 2l6 4-6 4" stroke="currentColor" stroke-width="1.5" fill="none"/></svg></div>
+        <div class="af-step">
+          <div class="af-step-box active">⏱ 24h Window<br><small style="color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:.58rem">groupBy device<br>count events</small></div>
+          <div class="af-step-label">Spark</div>
+        </div>
+        <div class="af-connector"><svg width="20" height="12" viewBox="0 0 20 12"><path d="M0 6h14M10 2l6 4-6 4" stroke="currentColor" stroke-width="1.5" fill="none"/></svg></div>
+        <div class="af-step">
+          <div class="af-step-box active">🔢 Count ≥ 10?<br><small style="font-family:'JetBrains Mono',monospace;font-size:.58rem;color:var(--orange)">threshold check</small></div>
+          <div class="af-step-label">Filter</div>
+        </div>
+        <div class="af-connector"><svg width="20" height="12" viewBox="0 0 20 12"><path d="M0 6h14M10 2l6 4-6 4" stroke="currentColor" stroke-width="1.5" fill="none"/></svg></div>
+        <div class="af-step">
+          <div class="af-step-box alert-step">🚨 Alert Written<br><small style="font-family:'JetBrains Mono',monospace;font-size:.58rem">device + window<br>+ evidence</small></div>
+          <div class="af-step-label">Postgres</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 24h window visualization -->
+    <div class="window-viz fade-up">
+      <div class="wv-title">24-Hour Window — Device dev_003 (abusive) vs dev_021 (normal)</div>
+      <div class="wv-track" id="windowTrack">
+        <div class="wv-window" style="left:5%;width:70%;opacity:.5">24-hour tumbling window</div>
+      </div>
+      <div class="wv-axis">
+        <span>T+0h</span><span>T+6h</span><span>T+12h</span><span>T+18h</span><span>T+24h</span>
+      </div>
+      <div style="display:flex;gap:1.5rem;margin-top:.75rem;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:.5rem;font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--muted)"><div style="width:10px;height:10px;border-radius:50%;background:var(--orange);box-shadow:0 0 6px var(--orange-glow)"></div>dev_003 (abusive — 14 events)</div>
+        <div style="display:flex;align-items:center;gap:.5rem;font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--muted)"><div style="width:10px;height:10px;border-radius:50%;background:var(--green)"></div>dev_021 (normal — 2 events)</div>
+      </div>
+    </div>
+
+    <!-- Core logic snippet -->
+    <div class="code-block fade-up">
+      <div class="cb-header">
+        <span class="cb-filename">stream/main_stream.py — core detection logic</span>
+        <span class="cb-lang">PySpark</span>
+      </div>
+      <div class="cb-body"><pre><span class="cm"># 24-hour tumbling window aggregation per device</span>
+<span class="var">w</span> <span class="op">=</span> <span class="fn">window</span>(<span class="fn">col</span>(<span class="str">"ts"</span>), <span class="str">"24 hours"</span>)
+
+<span class="var">agg</span> <span class="op">=</span> (df
+    .<span class="fn">withWatermark</span>(<span class="str">"ts"</span>, <span class="str">"24 hours"</span>)   <span class="cm"># tolerate late events</span>
+    .<span class="fn">groupBy</span>(<span class="fn">col</span>(<span class="str">"device_id"</span>), <span class="var">w</span>)
+    .<span class="fn">agg</span>(
+        <span class="fn">count</span>(<span class="fn">lit</span>(<span class="num">1</span>)).<span class="fn">alias</span>(<span class="str">"signup_count"</span>),
+        <span class="fn">smin</span>(<span class="str">"ts"</span>).<span class="fn">alias</span>(<span class="str">"first_seen_ts"</span>),
+        <span class="fn">smax</span>(<span class="str">"ts"</span>).<span class="fn">alias</span>(<span class="str">"last_seen_ts"</span>),
+    )
+    .<span class="fn">where</span>(<span class="fn">col</span>(<span class="str">"signup_count"</span>) <span class="op">>=</span> <span class="fn">lit</span>(<span class="var">THRESHOLD</span>))   <span class="cm"># THRESHOLD = 10</span>
+)</pre></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CONCLUSIONS ═══ -->
+<section>
+  <div class="wrap">
+    <div class="sec-label fade-up">Key Design Decisions</div>
+    <h2 class="fade-up">Why this stack<br><em>earns its complexity.</em></h2>
+    <div class="concl-grid fade-up">
+      <div class="concl-card">
+        <div class="concl-icon">🔑</div>
+        <div class="concl-title">Keyed by device_id, not user_id</div>
+        <div class="concl-body">Abusers create new accounts — that's the whole point. Keying by device fingerprint means the fraud signal survives account deletion. Per-key ordering in Kafka ensures correct windowed counts.</div>
+      </div>
+      <div class="concl-card">
+        <div class="concl-icon">⏱</div>
+        <div class="concl-title">Watermark = Window Length (24h)</div>
+        <div class="concl-body">Setting watermark equal to window length maximizes late-event tolerance without holding state indefinitely. Events up to 24h late are still correctly counted — important for mobile clients with unreliable connectivity.</div>
+      </div>
+      <div class="concl-card">
+        <div class="concl-icon">🔁</div>
+        <div class="concl-title">ON CONFLICT for idempotent writes</div>
+        <div class="concl-body">Spark micro-batches can replay on restart. The <code style="font-family:'JetBrains Mono',monospace;font-size:.78em">UNIQUE(device_id, window_start, window_end)</code> constraint with <code style="font-family:'JetBrains Mono',monospace;font-size:.78em">ON CONFLICT DO UPDATE</code> makes every write idempotent — no duplicate alerts.</div>
+      </div>
+      <div class="concl-card">
+        <div class="concl-icon">📋</div>
+        <div class="concl-title">JSONB raw capture for ML</div>
+        <div class="concl-body">Every signup event is stored as raw JSONB alongside structured columns. This preserves the full audit trail for retrospective ML feature engineering — no reprocessing Kafka needed to add new signals later.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div>
+    <span style="font-family:'Syne',sans-serif;font-weight:700">Ujwala Tripurana</span>
+    <span style="margin-left:1rem;font-size:.75rem">MS in AI &amp; Business Analytics · USF</span>
+  </div>
+  <div class="footer-links">
+    <a href="https://github.com/ujwalatripurana/promo-abuse-detection" target="_blank">GitHub Repo</a>
+    <a href="index.html">Back to Portfolio</a>
+  </div>
+</footer>
+
+<script>
+// ── Progress bar ──────────────────────────────────────────────────────────
+const prog = document.getElementById('prog');
+window.addEventListener('scroll', () => {
+  const s = window.scrollY, max = document.documentElement.scrollHeight - window.innerHeight;
+  prog.style.width = (s / max * 100) + '%';
+  document.getElementById('navbar').classList.toggle('scrolled', s > 50);
+});
+
+// ── Fade-up observer ──────────────────────────────────────────────────────
+const fadeObs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.1 });
+document.querySelectorAll('.fade-up').forEach(el => fadeObs.observe(el));
+
+// ── Live Event Feed Simulation ────────────────────────────────────────────
+const ABUSIVE_DEVICES = ['dev_003', 'dev_007'];
+const NORMAL_DEVICES = Array.from({length: 10}, (_, i) => `dev_${String(i+10).padStart(3,'0')}`);
+const ALL_DEVICES = [...ABUSIVE_DEVICES, ...NORMAL_DEVICES];
+
+// Track counts per device for the sim
+const deviceCounts = {};
+ALL_DEVICES.forEach(d => deviceCounts[d] = 0);
+
+let totalEvents = 0, totalAlerts = 0;
+const seenDevices = new Set();
+
+function randomUser() {
+  return 'u_' + Math.random().toString(36).slice(2, 10);
+}
+
+function nowStr() {
+  return new Date().toISOString().slice(11, 19);
+}
+
+function addEvent() {
+  const isAbusiveBurst = Math.random() < 0.14;
+  const device = isAbusiveBurst
+    ? ABUSIVE_DEVICES[Math.floor(Math.random() * ABUSIVE_DEVICES.length)]
+    : NORMAL_DEVICES[Math.floor(Math.random() * NORMAL_DEVICES.length)];
+
+  deviceCounts[device] = (deviceCounts[device] || 0) + 1;
+  seenDevices.add(device);
+  totalEvents++;
+
+  const isAbusive = ABUSIVE_DEVICES.includes(device);
+  const isAlert = isAbusive && deviceCounts[device] >= 10 && deviceCounts[device] % 3 === 0;
+  if (isAlert) totalAlerts++;
+
+  // Update stats
+  document.getElementById('stat-total').textContent = totalEvents;
+  document.getElementById('stat-alerts').textContent = totalAlerts;
+  document.getElementById('stat-devices').textContent = seenDevices.size;
+
+  // Build row
+  const row = document.createElement('div');
+  row.className = `event-row ${isAlert ? 'alert' : 'normal'}`;
+  row.innerHTML = `
+    <span class="ev-time">${nowStr()}</span>
+    <span class="ev-device ${isAbusive ? 'abusive' : 'normal'}">${device}</span>
+    <span class="ev-user">${randomUser()}</span>
+    ${isAlert
+      ? `<span class="ev-badge alert">🚨 ALERT ×${deviceCounts[device]}</span>`
+      : `<span class="ev-badge ok">✓ OK</span>`}
+  `;
+
+  const feed = document.getElementById('feedInner');
+  feed.insertBefore(row, feed.firstChild);
+
+  // Keep only last 12 rows visible
+  while (feed.children.length > 12) {
+    feed.removeChild(feed.lastChild);
+  }
+}
+
+// Start sim immediately, then interval
+addEvent();
+setInterval(addEvent, 480);
+
+// ── Window Visualization ──────────────────────────────────────────────────
+function buildWindowViz() {
+  const track = document.getElementById('windowTrack');
+
+  // Abusive device events: cluster of 14 events spread across the window
+  const abusivePositions = [8,10,13,16,18,22,28,32,35,40,45,52,60,68];
+  // Normal device: 2 random events
+  const normalPositions = [30, 65];
+
+  abusivePositions.forEach((pct, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'wv-event abusive';
+    dot.style.left = `${pct}%`;
+    dot.title = `dev_003 — signup #${i+1}`;
+    track.appendChild(dot);
+  });
+
+  normalPositions.forEach((pct, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'wv-event normal';
+    dot.style.left = `${pct}%`;
+    dot.title = `dev_021 — signup #${i+1}`;
+    track.appendChild(dot);
+  });
+
+  // Alert threshold line at ~75% (where count hits 10)
+  const threshold = document.createElement('div');
+  threshold.style.cssText = `position:absolute;left:${abusivePositions[9]}%;top:0;bottom:0;width:1px;background:rgba(255,85,0,0.6);`;
+  const thresholdLabel = document.createElement('div');
+  thresholdLabel.style.cssText = 'position:absolute;top:4px;font-family:"JetBrains Mono",monospace;font-size:.55rem;color:var(--orange);white-space:nowrap;transform:translateX(-50%)';
+  thresholdLabel.textContent = '🚨 threshold hit';
+  threshold.appendChild(thresholdLabel);
+  track.appendChild(threshold);
+}
+
+buildWindowViz();
+</script>
+</body>
+</html>
