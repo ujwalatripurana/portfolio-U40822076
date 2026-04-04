@@ -758,37 +758,13 @@ em { font-style: italic; }
 }
 
 /* ── Projects ────────────────────────────────────────────────────────────── */
-/* ── Projects ────────────────────────────────────────────────────────────── */
 .projects-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1.5rem;
 }
 
-/* ── Book Card System ─────────────────────────────────────────────────────── */
-.book-wrapper {
-  position: relative;
-  perspective: 1400px;
-  height: 360px;
-  cursor: pointer;
-  display: block;
-}
-.book-wrapper.featured {
-  grid-column: span 2;
-  height: 310px;
-}
-
-/* The book container that holds cover + inner page */
-.book-card {
-  position: absolute;
-  inset: 0;
-  transform-style: preserve-3d;
-}
-
-/* Left cover panel — rotates open like a book cover */
-.book-cover {
-  position: absolute;
-  inset: 0;
+.proj-card {
   background: var(--surface);
   border: 1px solid var(--border-sub);
   border-radius: var(--radius);
@@ -796,254 +772,29 @@ em { font-style: italic; }
   display: flex;
   flex-direction: column;
   gap: 0.9rem;
-  transform-origin: left center;
-  transform: rotateY(0deg);
-  transition: transform 0.65s cubic-bezier(0.4, 0, 0.2, 1),
-              border-color 0.3s ease,
-              box-shadow 0.4s ease;
-  backface-visibility: hidden;
-  z-index: 2;
-  overflow: hidden;
+  transition: border-color var(--transition), transform var(--transition),
+              box-shadow var(--transition), background var(--transition);
 }
-
-/* Spine shadow on the left edge of cover */
-.book-cover::before {
-  content: '';
-  position: absolute;
-  left: 0; top: 0; bottom: 0;
-  width: 6px;
-  background: linear-gradient(to right, rgba(0,229,195,0.22), transparent);
-  border-radius: var(--radius) 0 0 var(--radius);
-  transition: opacity 0.3s;
-}
-
-/* Subtle page-texture lines on cover */
-.book-cover::after {
-  content: '';
-  position: absolute;
-  top: 0; right: 0; bottom: 0;
-  width: 1px;
-  background: linear-gradient(to bottom,
-    transparent 0%,
-    rgba(0,229,195,0.08) 30%,
-    rgba(0,229,195,0.12) 50%,
-    rgba(0,229,195,0.08) 70%,
-    transparent 100%
-  );
-}
-
-/* "Open book" hint — small icon bottom-right of cover */
-.book-hint {
-  position: absolute;
-  bottom: 1.1rem;
-  right: 1.2rem;
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 0.58rem;
-  letter-spacing: 0.12em;
-  color: rgba(0,229,195,0.4);
-  text-transform: uppercase;
-  transition: opacity 0.25s, color 0.25s;
-  pointer-events: none;
-}
-.book-hint svg {
-  width: 12px; height: 12px;
-  stroke: currentColor;
-  fill: none;
-  stroke-width: 1.8;
-  animation: hintPulse 2.2s ease-in-out infinite;
-}
-@keyframes hintPulse {
-  0%, 100% { transform: translateX(0); opacity: 0.5; }
-  50% { transform: translateX(3px); opacity: 1; }
-}
-
-/* Inner page — visible once cover opens */
-.book-inner {
-  position: absolute;
-  inset: 0;
-  border-radius: var(--radius);
-  overflow: hidden;
-  border: 1px solid var(--border);
-  background: #050c1b;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-/* Preview frame inside the open book */
-.book-inner-preview {
-  flex: 1;
-  overflow: hidden;
-  position: relative;
-}
-
-/* Faux page content rendered as a mini-preview */
-.mini-preview {
-  position: absolute;
-  inset: 0;
-  padding: 1.2rem 1.4rem;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
-}
-.mp-url-bar {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid var(--border-sub);
-  border-radius: var(--radius-sm);
-  padding: 0.3rem 0.7rem;
-  margin-bottom: 0.2rem;
-}
-.mp-dots {
-  display: flex; gap: 4px;
-}
-.mp-dot {
-  width: 7px; height: 7px; border-radius: 50%;
-}
-.mp-dot:nth-child(1) { background: #ff5f57; }
-.mp-dot:nth-child(2) { background: #febc2e; }
-.mp-dot:nth-child(3) { background: #28c840; }
-.mp-url-text {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 0.6rem;
-  color: var(--muted);
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.mp-line {
-  height: 7px;
-  border-radius: 4px;
-  background: rgba(255,255,255,0.06);
-}
-.mp-line.accent  { background: rgba(0,229,195,0.25); }
-.mp-line.wide    { width: 90%; }
-.mp-line.medium  { width: 70%; }
-.mp-line.short   { width: 45%; }
-.mp-line.xshort  { width: 30%; }
-.mp-line.thin    { height: 5px; }
-.mp-block-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 0.4rem;
-  margin-top: 0.3rem;
-}
-.mp-block {
-  height: 38px;
-  border-radius: 6px;
-  background: rgba(129,140,248,0.08);
-  border: 1px solid rgba(129,140,248,0.12);
-}
-.mp-block.accent-block {
-  background: rgba(0,229,195,0.06);
-  border-color: rgba(0,229,195,0.15);
-}
-.mp-chart-row {
-  display: flex;
-  align-items: flex-end;
-  gap: 5px;
-  margin-top: 0.4rem;
-  padding: 0.5rem;
-  background: rgba(255,255,255,0.02);
-  border: 1px solid var(--border-sub);
-  border-radius: 6px;
-}
-.mp-bar {
-  flex: 1;
-  border-radius: 3px 3px 0 0;
-  background: rgba(0,229,195,0.18);
-  min-height: 8px;
-}
-
-/* Gradient fade at bottom of inner page */
-.book-inner-preview::after {
-  content: '';
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  height: 60px;
-  background: linear-gradient(to bottom, transparent, #050c1b);
-  pointer-events: none;
-}
-
-/* Footer of inner page — CTA */
-.book-inner-footer {
-  padding: 0.7rem 1.1rem;
-  border-top: 1px solid var(--border-sub);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: rgba(0,229,195,0.04);
-  flex-shrink: 0;
-}
-.book-inner-cta {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 0.7rem;
-  color: var(--accent);
-  letter-spacing: 0.08em;
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-.book-inner-cta svg {
-  width: 11px; height: 11px;
-  stroke: currentColor; fill: none;
-  stroke-width: 2.5;
-  transition: transform 0.2s;
-}
-.book-inner-footer:hover .book-inner-cta svg {
-  transform: translate(2px, -2px);
-}
-.book-inner-proj-title {
-  font-size: 0.68rem;
-  color: var(--muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 55%;
-}
-
-/* HOVER: swing cover open */
-.book-wrapper:hover .book-cover {
-  transform: rotateY(-145deg);
+.proj-card:hover {
   border-color: var(--border);
-  box-shadow: -8px 0 32px rgba(0,0,0,0.5),
-              -2px 0 12px rgba(0,229,195,0.08);
-}
-.book-wrapper.featured:hover .book-cover {
-  transform: rotateY(-145deg);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
+  background: var(--surface-h);
 }
 
-/* Cover shadow that appears as it opens */
-.book-cover-shadow {
-  position: absolute;
-  inset: 0;
-  border-radius: var(--radius);
-  background: linear-gradient(to right, rgba(0,0,0,0.6), transparent 40%);
-  opacity: 0;
-  transition: opacity 0.5s ease;
-  pointer-events: none;
-  z-index: 3;
-}
-.book-wrapper:hover .book-cover-shadow {
-  opacity: 1;
-}
-
-/* Featured */
-.book-wrapper.featured .book-cover {
+/* Featured card */
+.proj-featured {
+  grid-column: span 2;
   background: linear-gradient(135deg,
     rgba(0, 229, 195, 0.07) 0%,
     rgba(7, 13, 26, 0.6) 60%);
   border-color: rgba(0, 229, 195, 0.25);
 }
+.proj-featured:hover {
+  border-color: rgba(0, 229, 195, 0.5);
+  box-shadow: 0 16px 48px rgba(0, 229, 195, 0.12);
+}
 
-/* Shared content inside cover */
 .proj-top {
   display: flex;
   align-items: center;
@@ -1072,7 +823,7 @@ em { font-style: italic; }
   background: var(--accent-dim);
 }
 
-.proj-card h3, .book-cover h3 {
+.proj-card h3 {
   font-family: 'Fraunces', serif;
   font-size: 1.25rem;
   font-weight: 700;
@@ -1139,17 +890,6 @@ em { font-style: italic; }
   letter-spacing: 0.04em;
 }
 .proj-link:hover { gap: 0.65rem; opacity: 0.8; }
-
-/* Keep proj-card class working if used elsewhere */
-.proj-card {
-  background: var(--surface);
-  border: 1px solid var(--border-sub);
-  border-radius: var(--radius);
-  padding: 1.75rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.9rem;
-}
 
 /* ── Skills ──────────────────────────────────────────────────────────────── */
 .skills-grid {
@@ -1310,22 +1050,13 @@ footer {
 @media (max-width: 900px) {
   .about-grid        { grid-template-columns: 1fr; gap: 2.5rem; }
   .projects-grid     { grid-template-columns: 1fr; }
-  .book-wrapper      { height: 360px; }
-  .book-wrapper.featured { grid-column: span 1; height: 360px; }
+  .proj-featured     { grid-column: span 1; }
   .featured-metrics-grid { grid-template-columns: repeat(2, 1fr); }
   .skills-grid       { grid-template-columns: 1fr; }
   .contact-layout    { grid-template-columns: 1fr; gap: 2.5rem; }
   .nav-links         { display: none; }
   .hero-stats-bar    { gap: 1rem; padding: 1rem 1.25rem; }
   .stat-divider      { display: none; }
-  /* On mobile, disable 3D book — show cover with subtle lift */
-  .book-wrapper:hover .book-cover {
-    transform: rotateY(0deg) translateY(-4px) !important;
-    box-shadow: 0 12px 36px rgba(0,0,0,0.4);
-    border-color: var(--border);
-  }
-  .book-inner { display: none !important; }
-  .book-cover-shadow { display: none !important; }
 }
 
 @media (max-width: 600px) {
@@ -1346,11 +1077,12 @@ footer {
   background-size: auto, 40px 40px, 40px 40px;
 }
 
-/* ── Glow on featured book card ─────────────────────────────────────────── */
-.book-wrapper.featured:hover .book-cover {
-  box-shadow: -8px 0 32px rgba(0,0,0,0.6),
-              0 0 60px rgba(0, 229, 195, 0.1),
-              0 0 0 1px rgba(0,229,195,0.2);
+/* ── Glow on featured elements ───────────────────────────────────────────── */
+.proj-featured .proj-card:hover,
+.proj-featured:hover {
+  box-shadow: 0 0 0 1px rgba(0,229,195,0.25),
+              0 20px 60px rgba(0, 0, 0, 0.5),
+              0 0 80px rgba(0, 229, 195, 0.08);
 }
 
 /* ── Selection color ─────────────────────────────────────────────────────── */
@@ -1477,6 +1209,7 @@ footer {
   </div>
 </section>
 
+
 <!-- ==================== EXPERIENCE ==================== -->
 <section id="experience" class="section section-alt">
   <div class="section-wrap">
@@ -1541,285 +1274,101 @@ footer {
 
       <div class="projects-grid">
 
-        <!-- ── Book Card 1: Promo Abuse ── -->
-        <div class="book-wrapper fade-up" onclick="window.location='promo-abuse-detection.html'">
-          <div class="book-card">
-            <!-- Inner page revealed on open -->
-            <div class="book-inner">
-              <div class="book-inner-preview">
-                <div class="mini-preview">
-                  <div class="mp-url-bar">
-                    <div class="mp-dots"><div class="mp-dot"></div><div class="mp-dot"></div><div class="mp-dot"></div></div>
-                    <span class="mp-url-text">promo-abuse-detection.html</span>
-                  </div>
-                  <div class="mp-line accent wide"></div>
-                  <div class="mp-line medium thin" style="margin-top:2px"></div>
-                  <div class="mp-line short thin"></div>
-                  <div class="mp-chart-row">
-                    <div class="mp-bar" style="height:18px"></div>
-                    <div class="mp-bar" style="height:32px;background:rgba(0,229,195,0.35)"></div>
-                    <div class="mp-bar" style="height:14px"></div>
-                    <div class="mp-bar" style="height:26px"></div>
-                    <div class="mp-bar" style="height:22px;background:rgba(0,229,195,0.3)"></div>
-                    <div class="mp-bar" style="height:38px;background:rgba(0,229,195,0.4)"></div>
-                    <div class="mp-bar" style="height:20px"></div>
-                  </div>
-                  <div class="mp-block-row" style="margin-top:0.5rem">
-                    <div class="mp-block accent-block"></div>
-                    <div class="mp-block"></div>
-                    <div class="mp-block accent-block"></div>
-                  </div>
-                  <div class="mp-line wide thin" style="margin-top:0.5rem"></div>
-                  <div class="mp-line medium thin"></div>
-                </div>
-              </div>
-              <div class="book-inner-footer">
-                <span class="book-inner-proj-title mono">promo-abuse-detection</span>
-                <span class="book-inner-cta">Open project <svg viewBox="0 0 24 24"><path d="M7 17L17 7M7 7h10v10"/></svg></span>
-              </div>
-            </div>
-            <!-- Cover -->
-            <div class="book-cover">
-              <div class="proj-top">
-                <span class="proj-domain-badge">Fraud Detection</span>
-              </div>
-              <h3>Real-Time Promo &amp; Trial Abuse Detection</h3>
-              <p class="proj-role mono">Streaming AI · Anomaly Detection · Fraud</p>
-              <p class="proj-desc">Catches promo abuse in real time: trial hopping, payment reuse, and card fingerprint collisions. Cooldown checks run across device, email, and card signals.</p>
-              <div class="proj-tags">
-                <span class="ptag">Kafka</span>
-                <span class="ptag">Spark Streaming</span>
-                <span class="ptag">Python</span>
-                <span class="ptag">PostgreSQL</span>
-                <span class="ptag">Docker</span>
-              </div>
-              <div class="proj-metrics">
-                <div class="pmet"><span class="pmet-val mono counter-text" data-text="&lt;1s">—</span><span class="pmet-lbl">Event Latency</span></div>
-                <div class="pmet"><span class="pmet-val mono counter-text" data-text="3">—</span><span class="pmet-lbl">Signal Vectors</span></div>
-                <div class="pmet"><span class="pmet-val mono counter-text" data-text="✓ Audit">—</span><span class="pmet-lbl">Compliance</span></div>
-              </div>
-              <a class="proj-link" href="https://github.com/ujwalatripurana/promo-abuse-detection" target="_blank" onclick="event.stopPropagation()">
-                GitHub <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17L17 7M7 7h10v10"/></svg>
-              </a>
-              <div class="book-hint">
-                <svg viewBox="0 0 24 24"><path d="M2 12h20M13 5l7 7-7 7"/></svg>
-                open
-              </div>
-            </div>
-            <div class="book-cover-shadow"></div>
+        <article class="proj-card fade-up" style="position:relative;cursor:pointer" onclick="window.location='promo-abuse-detection.html'">
+        <div class="proj-top">
+        <span class="proj-domain-badge">Fraud Detection</span>
+         </div>
+          <h3>Real-Time Promo &amp; Trial Abuse Detection</h3>
+          <p class="proj-role mono">Streaming AI · Anomaly Detection · Fraud</p>
+          <p class="proj-desc">Catches promo abuse in real time: trial hopping, payment reuse, and card fingerprint collisions. Cooldown checks run across device, email, and card signals with audit logs stored in PostgreSQL.</p>
+          <div class="proj-tags">
+            <span class="ptag">Kafka</span>
+            <span class="ptag">Spark Streaming</span>
+            <span class="ptag">Python</span>
+            <span class="ptag">PostgreSQL</span>
+            <span class="ptag">Docker</span>
           </div>
-        </div>
+          <div class="proj-metrics">
+            <div class="pmet"><span class="pmet-val mono counter-text" data-text="&lt;1s">—</span><span class="pmet-lbl">Event Latency</span></div>
+            <div class="pmet"><span class="pmet-val mono counter-text" data-text="3">—</span><span class="pmet-lbl">Signal Vectors</span></div>
+            <div class="pmet"><span class="pmet-val mono counter-text" data-text="✓ Audit">—</span><span class="pmet-lbl">Compliance</span></div>
+          </div>
+          <a class="proj-link" href="https://github.com/ujwalatripurana/promo-abuse-detection" target="_blank" onclick="event.stopPropagation()">
+            GitHub <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17L17 7M7 7h10v10"/></svg>
+          </a>
+        </article>
 
-        <!-- ── Book Card 2: Housing ── -->
-        <div class="book-wrapper fade-up" onclick="window.location='housing-project.html'">
-          <div class="book-card">
-            <div class="book-inner">
-              <div class="book-inner-preview">
-                <div class="mini-preview">
-                  <div class="mp-url-bar">
-                    <div class="mp-dots"><div class="mp-dot"></div><div class="mp-dot"></div><div class="mp-dot"></div></div>
-                    <span class="mp-url-text">housing-project.html</span>
-                  </div>
-                  <div class="mp-line accent wide"></div>
-                  <div class="mp-line medium thin" style="margin-top:2px"></div>
-                  <div class="mp-block-row" style="margin-top:0.4rem">
-                    <div class="mp-block" style="background:rgba(245,158,11,0.08);border-color:rgba(245,158,11,0.15)"></div>
-                    <div class="mp-block accent-block"></div>
-                    <div class="mp-block" style="background:rgba(245,158,11,0.08);border-color:rgba(245,158,11,0.15)"></div>
-                  </div>
-                  <div class="mp-chart-row" style="margin-top:0.4rem">
-                    <div class="mp-bar" style="height:30px;background:rgba(245,158,11,0.3)"></div>
-                    <div class="mp-bar" style="height:20px"></div>
-                    <div class="mp-bar" style="height:36px;background:rgba(245,158,11,0.4)"></div>
-                    <div class="mp-bar" style="height:15px"></div>
-                    <div class="mp-bar" style="height:28px;background:rgba(245,158,11,0.25)"></div>
-                    <div class="mp-bar" style="height:42px;background:rgba(0,229,195,0.35)"></div>
-                    <div class="mp-bar" style="height:18px"></div>
-                  </div>
-                  <div class="mp-line wide thin" style="margin-top:0.5rem"></div>
-                  <div class="mp-line short thin"></div>
-                  <div class="mp-line medium thin"></div>
-                </div>
-              </div>
-              <div class="book-inner-footer">
-                <span class="book-inner-proj-title mono">housing-project</span>
-                <span class="book-inner-cta">Open project <svg viewBox="0 0 24 24"><path d="M7 17L17 7M7 7h10v10"/></svg></span>
-              </div>
-            </div>
-            <div class="book-cover">
-              <div class="proj-top">
-                <span class="proj-domain-badge">Data Storytelling</span>
-              </div>
-              <h3>U.S. Housing Affordability: Then &amp; Now</h3>
-              <p class="proj-role mono">Business Analytics · Visual Intelligence</p>
-              <p class="proj-desc">Combined 9 public datasets to show how housing affordability shifted over 30 years across income groups and regions. Two Tableau dashboards with filters by state, year, and income tier.</p>
-              <div class="proj-tags">
-                <span class="ptag">Tableau</span>
-                <span class="ptag">Python</span>
-                <span class="ptag">Pandas</span>
-                <span class="ptag">Matplotlib</span>
-              </div>
-              <div class="proj-metrics">
-                <div class="pmet"><span class="pmet-val mono counter-num" data-count="9">0</span><span class="pmet-lbl">Datasets</span></div>
-                <div class="pmet"><span class="pmet-val mono counter-num" data-count="11">0</span><span class="pmet-lbl">Visualizations</span></div>
-                <div class="pmet"><span class="pmet-val mono counter-num" data-count="30">0</span><span class="pmet-lbl">Years Coverage</span></div>
-              </div>
-              <a class="proj-link" href="https://github.com/ujwalatripurana/us-housing-affordability" target="_blank" onclick="event.stopPropagation()">
-                GitHub <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17L17 7M7 7h10v10"/></svg>
-              </a>
-              <div class="book-hint">
-                <svg viewBox="0 0 24 24"><path d="M2 12h20M13 5l7 7-7 7"/></svg>
-                open
-              </div>
-            </div>
-            <div class="book-cover-shadow"></div>
+        <article class="proj-card fade-up" style="position:relative;cursor:pointer" onclick="window.location='housing-project.html'">
+  <div class="proj-top">
+    <span class="proj-domain-badge">Data Storytelling</span>
+  </div>
+  <h3>U.S. Housing Affordability: Then &amp; Now</h3>
+          <p class="proj-role mono">Business Analytics · Visual Intelligence</p>
+          <p class="proj-desc">Combined 9 public datasets to show how housing affordability shifted over 30 years across income groups and regions. Two Tableau dashboards with filters by state, year, and income tier.</p>
+          <div class="proj-tags">
+            <span class="ptag">Tableau</span>
+            <span class="ptag">Python</span>
+            <span class="ptag">Pandas</span>
+            <span class="ptag">Matplotlib</span>
           </div>
-        </div>
+          <div class="proj-metrics">
+            <div class="pmet"><span class="pmet-val mono counter-num" data-count="9">0</span><span class="pmet-lbl">Datasets</span></div>
+            <div class="pmet"><span class="pmet-val mono counter-num" data-count="11">0</span><span class="pmet-lbl">Visualizations</span></div>
+            <div class="pmet"><span class="pmet-val mono counter-num" data-count="30">0</span><span class="pmet-lbl">Years Coverage</span></div>
+          </div>
+          <a class="proj-link" href="https://github.com/ujwalatripurana/us-housing-affordability" target="_blank" onclick="event.stopPropagation()">
+            GitHub <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17L17 7M7 7h10v10"/></svg>
+          </a>
+        </article>
 
-        <!-- ── Book Card 3: Causal Uplift (Featured / full-width) ── -->
-        <div class="book-wrapper featured fade-up" onclick="window.location='causal-uplift.html'">
-          <div class="book-card">
-            <div class="book-inner">
-              <div class="book-inner-preview">
-                <div class="mini-preview" style="flex-direction:row;gap:0.8rem">
-                  <div style="flex:1;display:flex;flex-direction:column;gap:0.5rem">
-                    <div class="mp-url-bar">
-                      <div class="mp-dots"><div class="mp-dot"></div><div class="mp-dot"></div><div class="mp-dot"></div></div>
-                      <span class="mp-url-text">causal-uplift.html</span>
-                    </div>
-                    <div class="mp-line accent wide"></div>
-                    <div class="mp-line medium thin" style="margin-top:2px"></div>
-                    <div class="mp-chart-row" style="height:60px;align-items:flex-end">
-                      <div class="mp-bar" style="height:25px"></div>
-                      <div class="mp-bar" style="height:45px;background:rgba(0,229,195,0.45)"></div>
-                      <div class="mp-bar" style="height:30px"></div>
-                      <div class="mp-bar" style="height:55px;background:rgba(0,229,195,0.55)"></div>
-                      <div class="mp-bar" style="height:38px;background:rgba(0,229,195,0.3)"></div>
-                      <div class="mp-bar" style="height:50px;background:rgba(0,229,195,0.5)"></div>
-                    </div>
-                  </div>
-                  <div style="flex:1;display:flex;flex-direction:column;gap:0.5rem">
-                    <div class="mp-block-row" style="grid-template-columns:1fr 1fr;margin-top:1.8rem">
-                      <div class="mp-block accent-block" style="height:52px"></div>
-                      <div class="mp-block" style="height:52px"></div>
-                    </div>
-                    <div class="mp-line wide thin"></div>
-                    <div class="mp-line medium thin"></div>
-                    <div class="mp-line short thin"></div>
-                  </div>
-                </div>
-              </div>
-              <div class="book-inner-footer">
-                <span class="book-inner-proj-title mono">causal-uplift-modelling · ★ Featured</span>
-                <span class="book-inner-cta">Open project <svg viewBox="0 0 24 24"><path d="M7 17L17 7M7 7h10v10"/></svg></span>
-              </div>
-            </div>
-            <div class="book-cover" style="background:linear-gradient(135deg,rgba(0,229,195,0.07)0%,rgba(7,13,26,0.6)60%);border-color:rgba(0,229,195,0.25)">
-              <div class="proj-top">
-                <span class="proj-domain-badge featured-badge">&#9733; Featured</span>
-              </div>
-              <h3>Causal Uplift Modeling for Marketing</h3>
-              <p class="proj-role mono">Causal AI · Revenue Optimization · ML</p>
-              <p class="proj-desc">Identifies users who actually respond to ads — not just who converts. T-learner and S-learner models beat traditional targeting by 28%, with AI-driven decision rules that automate spend.</p>
-              <div class="proj-tags">
-                <span class="ptag">CausalML</span>
-                <span class="ptag">Python</span>
-                <span class="ptag">Scikit-learn</span>
-                <span class="ptag">Criteo Dataset</span>
-              </div>
-              <div class="proj-metrics featured-metrics-grid">
-                <div class="pmet"><span class="pmet-val mono counter-num" data-count="75" data-suffix="%">0</span><span class="pmet-lbl">Ad Spend Saved</span></div>
-                <div class="pmet"><span class="pmet-val mono counter-text" data-text="2.4–9.6x">—</span><span class="pmet-lbl">ROAS Uplift</span></div>
-                <div class="pmet"><span class="pmet-val mono counter-num" data-count="28" data-suffix="%">0</span><span class="pmet-lbl">vs. Baseline</span></div>
-                <div class="pmet"><span class="pmet-val mono counter-text" data-text="$175k">—</span><span class="pmet-lbl">Annual Impact</span></div>
-              </div>
-              <a class="proj-link" href="https://github.com/ujwalatripurana/causal-uplift-modelling" target="_blank" onclick="event.stopPropagation()">
-                GitHub <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17L17 7M7 7h10v10"/></svg>
-              </a>
-              <div class="book-hint">
-                <svg viewBox="0 0 24 24"><path d="M2 12h20M13 5l7 7-7 7"/></svg>
-                open
-              </div>
-            </div>
-            <div class="book-cover-shadow"></div>
+        <!-- Featured -->
+        <article class="proj-card fade-up" style="position:relative;cursor:pointer" onclick="window.location='causal-uplift.html'">
+          <div class="proj-top">
+            <span class="proj-domain-badge featured-badge">&#9733; Featured</span>
           </div>
-        </div>
+          <h3>Causal Uplift Modeling for Marketing</h3>
+          <p class="proj-role mono">Causal AI · Revenue Optimization · ML</p>
+          <p class="proj-desc">Identifies users who actually respond to ads — not just who converts. T-learner and S-learner models beat traditional targeting by 28%, with AI-driven decision rules that automate spend and flag edge cases for human review.</p>
+          <div class="proj-tags">
+            <span class="ptag">CausalML</span>
+            <span class="ptag">Python</span>
+            <span class="ptag">Scikit-learn</span>
+            <span class="ptag">Criteo Dataset</span>
+          </div>
+          <div class="proj-metrics featured-metrics-grid">
+            <div class="pmet"><span class="pmet-val mono counter-num" data-count="75" data-suffix="%">0</span><span class="pmet-lbl">Ad Spend Saved</span></div>
+            <div class="pmet"><span class="pmet-val mono counter-text" data-text="2.4–9.6x">—</span><span class="pmet-lbl">ROAS Uplift</span></div>
+            <div class="pmet"><span class="pmet-val mono counter-num" data-count="28" data-suffix="%">0</span><span class="pmet-lbl">vs. Baseline</span></div>
+            <div class="pmet"><span class="pmet-val mono counter-text" data-text="$500K+">—</span><span class="pmet-lbl">Annual Impact</span></div>
+          </div>
+          <a class="proj-link" href="https://github.com/ujwalatripurana/causal-uplift-modelling" target="_blank" onclick="event.stopPropagation()">
+            GitHub <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17L17 7M7 7h10v10"/></svg>
+          </a>
+        </article>
 
-        <!-- ── Book Card 4: Crime Hotspot ── -->
-        <div class="book-wrapper fade-up" onclick="window.location='crime-hotspot.html'">
-          <div class="book-card">
-            <div class="book-inner">
-              <div class="book-inner-preview">
-                <div class="mini-preview">
-                  <div class="mp-url-bar">
-                    <div class="mp-dots"><div class="mp-dot"></div><div class="mp-dot"></div><div class="mp-dot"></div></div>
-                    <span class="mp-url-text">crime-hotspot.html</span>
-                  </div>
-                  <div class="mp-line accent wide"></div>
-                  <div class="mp-line medium thin" style="margin-top:2px"></div>
-                  <!-- faux geo grid -->
-                  <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:3px;margin-top:0.4rem">
-                    <div style="height:16px;border-radius:3px;background:rgba(129,140,248,0.15)"></div>
-                    <div style="height:16px;border-radius:3px;background:rgba(0,229,195,0.35)"></div>
-                    <div style="height:16px;border-radius:3px;background:rgba(0,229,195,0.12)"></div>
-                    <div style="height:16px;border-radius:3px;background:rgba(245,158,11,0.45)"></div>
-                    <div style="height:16px;border-radius:3px;background:rgba(129,140,248,0.1)"></div>
-                    <div style="height:16px;border-radius:3px;background:rgba(0,229,195,0.25)"></div>
-                    <div style="height:16px;border-radius:3px;background:rgba(0,229,195,0.2)"></div>
-                    <div style="height:16px;border-radius:3px;background:rgba(245,158,11,0.6)"></div>
-                    <div style="height:16px;border-radius:3px;background:rgba(0,229,195,0.15)"></div>
-                    <div style="height:16px;border-radius:3px;background:rgba(129,140,248,0.2)"></div>
-                    <div style="height:16px;border-radius:3px;background:rgba(245,158,11,0.3)"></div>
-                    <div style="height:16px;border-radius:3px;background:rgba(0,229,195,0.4)"></div>
-                  </div>
-                  <div class="mp-chart-row" style="margin-top:0.5rem">
-                    <div class="mp-bar" style="height:22px;background:rgba(129,140,248,0.3)"></div>
-                    <div class="mp-bar" style="height:38px;background:rgba(0,229,195,0.35)"></div>
-                    <div class="mp-bar" style="height:16px"></div>
-                    <div class="mp-bar" style="height:30px;background:rgba(245,158,11,0.3)"></div>
-                    <div class="mp-bar" style="height:42px;background:rgba(0,229,195,0.4)"></div>
-                    <div class="mp-bar" style="height:20px"></div>
-                    <div class="mp-bar" style="height:35px;background:rgba(129,140,248,0.25)"></div>
-                  </div>
-                  <div class="mp-line wide thin" style="margin-top:0.4rem"></div>
-                  <div class="mp-line short thin"></div>
-                </div>
-              </div>
-              <div class="book-inner-footer">
-                <span class="book-inner-proj-title mono">crime-hotspot-ml</span>
-                <span class="book-inner-cta">Open project <svg viewBox="0 0 24 24"><path d="M7 17L17 7M7 7h10v10"/></svg></span>
-              </div>
-            </div>
-            <div class="book-cover">
-              <div class="proj-top">
-                <span class="proj-domain-badge">Geospatial AI</span>
-              </div>
-              <h3>ML-Based Crime Hotspot Prediction</h3>
-              <p class="proj-role mono">Predictive Analytics · MLOps · Geospatial</p>
-              <p class="proj-desc">Predicted crime hotspots across neighborhoods using 100K+ records and spatial-temporal patterns. Full retrain pipeline runs automatically on Airflow with BigQuery as the data warehouse.</p>
-              <div class="proj-tags">
-                <span class="ptag">Random Forest</span>
-                <span class="ptag">Airflow</span>
-                <span class="ptag">BigQuery</span>
-                <span class="ptag">KNN</span>
-                <span class="ptag">SVM</span>
-              </div>
-              <div class="proj-metrics">
-                <div class="pmet"><span class="pmet-val mono counter-text" data-text="100K+">—</span><span class="pmet-lbl">Records</span></div>
-                <div class="pmet"><span class="pmet-val mono counter-num" data-count="87" data-suffix="%">0</span><span class="pmet-lbl">Accuracy</span></div>
-                <div class="pmet"><span class="pmet-val mono counter-text" data-text="0.84">—</span><span class="pmet-lbl">F1 Score</span></div>
-              </div>
-              <a class="proj-link" href="https://github.com/ujwalatripurana/crime-hotspot-ml" target="_blank" onclick="event.stopPropagation()">
-                GitHub <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17L17 7M7 7h10v10"/></svg>
-              </a>
-              <div class="book-hint">
-                <svg viewBox="0 0 24 24"><path d="M2 12h20M13 5l7 7-7 7"/></svg>
-                open
-              </div>
-            </div>
-            <div class="book-cover-shadow"></div>
+        <article class="proj-card fade-up" style="position:relative;cursor:pointer" onclick="window.location='crime-hotspot.html'">
+          <div class="proj-top">
+            <span class="proj-domain-badge">Geospatial AI</span>
           </div>
-        </div>
+          <h3>ML-Based Crime Hotspot Prediction</h3>
+          <p class="proj-role mono">Predictive Analytics · MLOps · Geospatial</p>
+          <p class="proj-desc">Predicted crime hotspots across neighborhoods using 100K+ records and spatial-temporal patterns. Full retrain pipeline runs automatically on Airflow with BigQuery as the data warehouse.</p>
+          <div class="proj-tags">
+            <span class="ptag">Random Forest</span>
+            <span class="ptag">Airflow</span>
+            <span class="ptag">BigQuery</span>
+            <span class="ptag">KNN</span>
+            <span class="ptag">SVM</span>
+          </div>
+          <div class="proj-metrics">
+            <div class="pmet"><span class="pmet-val mono counter-text" data-text="100K+">—</span><span class="pmet-lbl">Records</span></div>
+            <div class="pmet"><span class="pmet-val mono counter-num" data-count="87" data-suffix="%">0</span><span class="pmet-lbl">Accuracy</span></div>
+            <div class="pmet"><span class="pmet-val mono counter-text" data-text="0.84">—</span><span class="pmet-lbl">F1 Score</span></div>
+          </div>
+          <a class="proj-link" href="https://github.com/ujwalatripurana/crime-hotspot-ml" target="_blank" onclick="event.stopPropagation()">
+            GitHub <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17L17 7M7 7h10v10"/></svg>
+          </a>
+        </article>
 
       </div>
     </div>
@@ -2140,7 +1689,6 @@ footer {
       if (el) el.href = dataUrl;
     });
   })();
-
 
 const STARS = [
   {
@@ -2495,9 +2043,7 @@ function init() {
 }
 
 window.addEventListener('load', () => setTimeout(init, 60));
-
-  </script>
-
+</script>
 
 </body>
 </html>
