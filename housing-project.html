@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>U.S. Housing Affordability — Ujwala Tripurana</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;1,9..144,300&family=IBM+Plex+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg: #070d1a;
+  --bg-alt: #0c1525;
+  --surface: rgba(255,255,255,0.04);
+  --surface-h: rgba(255,255,255,0.07);
+  --border: rgba(0,229,195,0.13);
+  --border-sub: rgba(255,255,255,0.07);
+  --text: #e2e8f8;
+  --muted: #7a8da6;
+  --accent: #00e5c3;
+  --accent-dim: rgba(0,229,195,0.12);
+  --amber: #f59e0b;
+  --amber-dim: rgba(245,158,11,0.12);
+  --periwinkle: #818cf8;
+  --danger: #f87171;
+  --radius: 14px;
+  --radius-sm: 8px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:16px;line-height:1.7;overflow-x:hidden}
+
+/* ── Progress bar ── */
+#prog{position:fixed;top:0;left:0;height:2px;width:0%;background:linear-gradient(90deg,var(--accent),var(--periwinkle));z-index:999;transition:width .1s linear}
+
+/* ── Nav ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;display:flex;align-items:center;padding:0 2rem;justify-content:space-between;transition:background .3s,border-color .3s;border-bottom:1px solid transparent}
+nav.scrolled{background:rgba(7,13,26,.9);backdrop-filter:blur(16px);border-color:var(--border-sub)}
+.nav-back{display:flex;align-items:center;gap:.6rem;color:var(--muted);text-decoration:none;font-size:.85rem;font-weight:500;transition:color .2s}
+.nav-back:hover{color:var(--accent)}
+.nav-back svg{transition:transform .2s}
+.nav-back:hover svg{transform:translateX(-3px)}
+.nav-tag{font-family:'IBM Plex Mono',monospace;font-size:.7rem;color:var(--accent);letter-spacing:.1em;border:1px solid var(--border);padding:.3rem .8rem;border-radius:999px;background:var(--accent-dim)}
+
+/* ── Hero ── */
+#hero{min-height:100vh;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;padding:80px 2rem 4rem}
+.hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 30% 50%, rgba(0,229,195,.04) 0%, transparent 60%),radial-gradient(ellipse 60% 80% at 80% 20%, rgba(129,140,248,.04) 0%, transparent 60%)}
+.hero-grid-lines{position:absolute;inset:0;background-image:linear-gradient(rgba(0,229,195,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,195,.025) 1px,transparent 1px);background-size:60px 60px;mask-image:radial-gradient(ellipse at center,black 30%,transparent 80%)}
+.hero-inner{position:relative;z-index:1;max-width:900px;width:100%}
+.hero-kicker{font-family:'IBM Plex Mono',monospace;font-size:.72rem;letter-spacing:.18em;color:var(--accent);text-transform:uppercase;margin-bottom:1.5rem;opacity:0;animation:fadeUp .8s .2s both}
+h1.hero-title{font-family:'Fraunces',serif;font-size:clamp(3rem,8vw,6.5rem);font-weight:700;line-height:.95;letter-spacing:-.03em;margin-bottom:1.5rem;opacity:0;animation:fadeUp .9s .35s both}
+h1.hero-title em{font-style:italic;font-weight:300;color:var(--accent)}
+.hero-sub{font-size:clamp(1rem,2vw,1.2rem);color:var(--muted);max-width:600px;margin-bottom:3rem;opacity:0;animation:fadeUp .8s .5s both}
+.hero-stat-row{display:flex;gap:2rem;flex-wrap:wrap;opacity:0;animation:fadeUp .8s .65s both}
+.h-stat{display:flex;flex-direction:column;gap:.3rem}
+.h-stat-val{font-family:'IBM Plex Mono',monospace;font-size:2.2rem;font-weight:500;color:var(--accent);line-height:1}
+.h-stat-val.danger{color:var(--danger)}
+.h-stat-label{font-size:.72rem;letter-spacing:.1em;color:var(--muted);text-transform:uppercase}
+.h-divider{width:1px;background:var(--border-sub);align-self:stretch}
+.scroll-hint{position:absolute;bottom:2.5rem;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:.5rem;opacity:0;animation:fadeUp .8s 1.2s both}
+.scroll-hint span{font-size:.6rem;letter-spacing:.2em;color:var(--muted);text-transform:uppercase}
+.scroll-line{width:1px;height:40px;background:linear-gradient(to bottom,var(--accent),transparent);animation:scrollDrop 1.8s ease-in-out infinite}
+@keyframes scrollDrop{0%{transform:scaleY(0);transform-origin:top}50%{transform:scaleY(1);transform-origin:top}100%{transform:scaleY(1);transform-origin:bottom;opacity:0}}
+
+/* ── Sections ── */
+section{padding:7rem 2rem}
+.wrap{max-width:1000px;margin:0 auto}
+.section-label{font-family:'IBM Plex Mono',monospace;font-size:.65rem;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;margin-bottom:1rem}
+.section-title{font-family:'Fraunces',serif;font-size:clamp(2rem,5vw,3.5rem);font-weight:700;line-height:1.05;letter-spacing:-.025em;margin-bottom:2rem}
+.section-title em{font-style:italic;font-weight:300;color:var(--accent)}
+.body-text{color:var(--muted);font-size:1rem;line-height:1.8;max-width:680px}
+.body-text strong{color:var(--text);font-weight:600}
+.alt-bg{background:var(--bg-alt)}
+
+/* ── Pull quote ── */
+.pull-quote{border-left:3px solid var(--accent);padding:1.25rem 1.5rem;background:var(--accent-dim);border-radius:0 var(--radius) var(--radius) 0;margin:2rem 0}
+.pull-quote p{font-family:'Fraunces',serif;font-size:1.3rem;font-style:italic;font-weight:300;color:var(--text);line-height:1.5}
+.pull-quote cite{display:block;font-size:.75rem;font-family:'IBM Plex Mono',monospace;color:var(--accent);margin-top:.75rem;font-style:normal;letter-spacing:.08em}
+
+/* ── Chart card ── */
+.chart-card{background:var(--surface);border:1px solid var(--border-sub);border-radius:var(--radius);padding:2rem;margin-top:3rem;transition:border-color .3s}
+.chart-card:hover{border-color:var(--border)}
+.chart-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.5rem;gap:1rem;flex-wrap:wrap}
+.chart-title{font-family:'Fraunces',serif;font-size:1.4rem;font-weight:700;color:var(--text)}
+.chart-subtitle{font-size:.82rem;color:var(--muted);margin-top:.25rem}
+.chart-badge{font-family:'IBM Plex Mono',monospace;font-size:.65rem;letter-spacing:.1em;padding:.3rem .8rem;border-radius:999px;border:1px solid;white-space:nowrap}
+.badge-teal{color:var(--accent);border-color:var(--border);background:var(--accent-dim)}
+.badge-amber{color:var(--amber);border-color:rgba(245,158,11,.25);background:var(--amber-dim)}
+.badge-danger{color:var(--danger);border-color:rgba(248,113,113,.25);background:rgba(248,113,113,.1)}
+.chart-wrap{position:relative;height:320px}
+.chart-annotation{font-size:.78rem;color:var(--muted);margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border-sub)}
+.chart-annotation strong{color:var(--accent)}
+
+/* ── Two col ── */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:2rem}
+@media(max-width:720px){.two-col{grid-template-columns:1fr}}
+
+/* ── Finding cards ── */
+.finding-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.25rem;margin-top:2rem}
+@media(max-width:800px){.finding-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:500px){.finding-grid{grid-template-columns:1fr}}
+.finding-card{background:var(--surface);border:1px solid var(--border-sub);border-radius:var(--radius);padding:1.5rem;transition:border-color .3s,transform .3s}
+.finding-card:hover{border-color:var(--border);transform:translateY(-3px)}
+.finding-num{font-family:'IBM Plex Mono',monospace;font-size:2rem;font-weight:500;line-height:1;margin-bottom:.5rem}
+.finding-num.teal{color:var(--accent)}
+.finding-num.amber{color:var(--amber)}
+.finding-num.danger{color:var(--danger)}
+.finding-num.periwinkle{color:var(--periwinkle)}
+.finding-desc{font-size:.875rem;color:var(--muted);line-height:1.6}
+.finding-label{font-size:.65rem;font-family:'IBM Plex Mono',monospace;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem}
+
+/* ── Timeline dataset ── */
+.dataset-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-top:2rem}
+@media(max-width:700px){.dataset-grid{grid-template-columns:repeat(2,1fr)}}
+.ds-item{background:var(--surface);border:1px solid var(--border-sub);border-radius:var(--radius-sm);padding:1rem;transition:border-color .3s}
+.ds-item:hover{border-color:var(--border)}
+.ds-source{font-size:.62rem;font-family:'IBM Plex Mono',monospace;color:var(--accent);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.4rem}
+.ds-name{font-size:.82rem;color:var(--text);font-weight:500}
+
+/* ── Regional bars ── */
+.region-bars{display:flex;flex-direction:column;gap:1rem;margin-top:1.5rem}
+.rb-item{display:flex;flex-direction:column;gap:.4rem}
+.rb-top{display:flex;justify-content:space-between;align-items:center}
+.rb-name{font-size:.85rem;color:var(--text);font-weight:500}
+.rb-val{font-size:.82rem;font-family:'IBM Plex Mono',monospace;color:var(--accent)}
+.rb-track{height:6px;background:rgba(255,255,255,.06);border-radius:999px;overflow:hidden}
+.rb-fill{height:100%;border-radius:999px;width:0%;transition:width 1.2s cubic-bezier(.4,0,.2,1)}
+
+/* ── States highlight ── */
+.states-two{display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-top:1.5rem}
+@media(max-width:600px){.states-two{grid-template-columns:1fr}}
+.state-list-title{font-size:.65rem;font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.15em;margin-bottom:1rem;padding-bottom:.6rem;border-bottom:1px solid var(--border-sub)}
+.state-list-title.teal{color:var(--accent)}
+.state-list-title.amber{color:var(--amber)}
+.state-row{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;border-bottom:1px solid rgba(255,255,255,.03);font-size:.85rem}
+.state-row:last-child{border-bottom:none}
+.state-name{color:var(--text)}
+.state-income{font-family:'IBM Plex Mono',monospace;font-size:.78rem;color:var(--muted)}
+
+/* ── Conclusion callout ── */
+.conclusion-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-top:2.5rem}
+@media(max-width:650px){.conclusion-grid{grid-template-columns:1fr}}
+.concl-card{background:linear-gradient(135deg,rgba(0,229,195,.06),transparent);border:1px solid var(--border);border-radius:var(--radius);padding:1.75rem}
+.concl-icon{font-size:1.5rem;margin-bottom:.75rem}
+.concl-title{font-weight:600;font-size:1rem;margin-bottom:.5rem;color:var(--text)}
+.concl-desc{font-size:.875rem;color:var(--muted);line-height:1.65}
+
+/* ── Footer ── */
+footer{border-top:1px solid var(--border-sub);padding:2rem;display:flex;justify-content:space-between;align-items:center;font-size:.8rem;color:var(--muted);flex-wrap:wrap;gap:1rem}
+.footer-links{display:flex;gap:1.5rem}
+.footer-links a{color:var(--muted);text-decoration:none;transition:color .2s}
+.footer-links a:hover{color:var(--accent)}
+
+/* ── Fade-up ── */
+.fade-up{opacity:0;transform:translateY(28px);transition:opacity .7s cubic-bezier(.4,0,.2,1),transform .7s cubic-bezier(.4,0,.2,1)}
+.fade-up.visible{opacity:1;transform:none}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:rgba(0,229,195,.2);border-radius:999px}
+::selection{background:rgba(0,229,195,.25)}
+</style>
+</head>
+<body>
+
+<div id="prog"></div>
+
+<nav id="navbar">
+  <a href="index.html" class="nav-back">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M5 12l7-7M5 12l7 7"/></svg>
+    Back to Portfolio
+  </a>
+  <span class="nav-tag">Data Storytelling</span>
+</nav>
+
+<!-- ═══ HERO ═══ -->
+<section id="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid-lines"></div>
+  <div class="hero-inner">
+    <p class="hero-kicker">U.S. Housing Affordability · 1984–2024</p>
+    <h1 class="hero-title">The Dream<br>Didn't <em>Disappear.</em><br>It Got Priced Out.</h1>
+    <p class="hero-sub">A data investigation into 40 years of American homeownership — how the math changed, who it left behind, and why your zip code now determines your financial fate more than your paycheck does.</p>
+    <div class="hero-stat-row">
+      <div class="h-stat">
+        <span class="h-stat-val" id="hero-pti">1.4x</span>
+        <span class="h-stat-label">Price-to-Income 1984</span>
+      </div>
+      <div class="h-divider"></div>
+      <div class="h-stat">
+        <span class="h-stat-val danger">5.3x</span>
+        <span class="h-stat-label">Price-to-Income 2023</span>
+      </div>
+      <div class="h-divider"></div>
+      <div class="h-stat">
+        <span class="h-stat-val danger">+280%</span>
+        <span class="h-stat-label">Affordability Deterioration</span>
+      </div>
+      <div class="h-divider"></div>
+      <div class="h-stat">
+        <span class="h-stat-val">9</span>
+        <span class="h-stat-label">Datasets Integrated</span>
+      </div>
+    </div>
+  </div>
+  <div class="scroll-hint">
+    <span>scroll</span>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<!-- ═══ THE PROBLEM ═══ -->
+<section class="alt-bg">
+  <div class="wrap">
+    <p class="section-label fade-up">The Problem</p>
+    <h2 class="section-title fade-up">A number that<br>changed <em>everything.</em></h2>
+    <div class="two-col">
+      <div class="body-text fade-up">
+        <p>In 1984, buying a median-priced American home meant spending roughly <strong>1.4 times your annual household income</strong>. Stretch a little, save for a few years, and homeownership was within reach for most middle-class families.</p>
+        <p style="margin-top:1rem">By 2023, that number had ballooned to <strong>5.3 times</strong>. The same goal — the same house in the same country — now demands nearly four times the relative sacrifice. Wages grew. Prices grew faster. Then mortgage rates spiked. The gap became a canyon.</p>
+        <p style="margin-top:1rem">This project asks a simple question: <strong>when exactly did the math break, and for whom?</strong></p>
+      </div>
+      <div class="fade-up">
+        <div class="pull-quote">
+          <p>"In 1984, saving for a down payment took 2.7 years. By 2023, it took 10.6 years — nearly four times longer."</p>
+          <cite>Computed from FRED + Census income data</cite>
+        </div>
+        <div class="finding-grid" style="grid-template-columns:1fr 1fr;margin-top:1.25rem">
+          <div class="finding-card">
+            <div class="finding-label">Median price 1984</div>
+            <div class="finding-num teal">$80K</div>
+            <div class="finding-desc">Median home sale price at the start of our dataset</div>
+          </div>
+          <div class="finding-card">
+            <div class="finding-label">Median price 2023</div>
+            <div class="finding-num danger">$427K</div>
+            <div class="finding-desc">434% increase over 39 years — incomes grew 37%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ THE DATA ═══ -->
+<section>
+  <div class="wrap">
+    <p class="section-label fade-up">Methodology</p>
+    <h2 class="section-title fade-up">9 datasets.<br>One <em>coherent story.</em></h2>
+    <p class="body-text fade-up">No single dataset tells this story. We integrated federal reserve data, Census Bureau household surveys, Zillow metro-level affordability indexes, and BLS inflation data — then normalized everything to consistent annual timeframes for apples-to-apples comparison.</p>
+    <div class="dataset-grid fade-up">
+      <div class="ds-item"><div class="ds-source">FRED / NAR</div><div class="ds-name">Median Home Sale Price (1975–2025)</div></div>
+      <div class="ds-item"><div class="ds-source">Census Bureau</div><div class="ds-name">Real Median Household Income by State</div></div>
+      <div class="ds-item"><div class="ds-source">FRED / Freddie Mac</div><div class="ds-name">30-Year Fixed Mortgage Rate</div></div>
+      <div class="ds-item"><div class="ds-source">Census Bureau</div><div class="ds-name">Homeownership Rate by Age Group</div></div>
+      <div class="ds-item"><div class="ds-source">FRED</div><div class="ds-name">Annual Housing Starts</div></div>
+      <div class="ds-item"><div class="ds-source">Zillow Research</div><div class="ds-name">Metro Home Affordability Index</div></div>
+      <div class="ds-item"><div class="ds-source">Federal Reserve</div><div class="ds-name">Household Debt Service Ratio</div></div>
+      <div class="ds-item"><div class="ds-source">Realtor.com</div><div class="ds-name">National Housing Inventory</div></div>
+      <div class="ds-item"><div class="ds-source">BLS</div><div class="ds-name">Consumer Price Index (CPI)</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FINDING 1: PRICE VS INCOME DIVERGENCE ═══ -->
+<section class="alt-bg">
+  <div class="wrap">
+    <p class="section-label fade-up">Finding 01</p>
+    <h2 class="section-title fade-up">Prices and incomes<br>stopped <em>moving together.</em></h2>
+    <p class="body-text fade-up">For decades, home prices and household incomes tracked each other closely. Then the lines split. The 2000s housing bubble was one rupture — the post-pandemic surge was another, more severe one. What's different this time: <strong>interest rates also rose sharply in 2022–2023</strong>, compounding the price shock with a monthly payment shock.</p>
+
+    <div class="chart-card fade-up">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Home Prices vs. Median Household Income</div>
+          <div class="chart-subtitle">Indexed to 1984 = 100 · Showing divergence over 39 years</div>
+        </div>
+        <span class="chart-badge badge-danger">434% vs 37%</span>
+      </div>
+      <div class="chart-wrap"><canvas id="divergenceChart"></canvas></div>
+      <div class="chart-annotation">From 1984–2023, median home prices rose <strong>434%</strong> while median household income grew just <strong>37%</strong> in real terms. The gap represents a structural, not cyclical, shift.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FINDING 2: PTI RATIO ═══ -->
+<section>
+  <div class="wrap">
+    <p class="section-label fade-up">Finding 02</p>
+    <h2 class="section-title fade-up">The affordability ratio<br>hit a <em>40-year high.</em></h2>
+    <p class="body-text fade-up">The price-to-income ratio is the cleanest single measure of housing affordability. It tells you: "how many years of your gross income would it take to buy a median home?" When this number climbs, the ladder gets longer. At 5.3x in 2023, it's the highest it's ever been in our 40-year dataset.</p>
+
+    <div class="chart-card fade-up">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Price-to-Income Ratio (1984–2023)</div>
+          <div class="chart-subtitle">How many years of median income = median home price</div>
+        </div>
+        <span class="chart-badge badge-teal">40-year peak in 2022</span>
+      </div>
+      <div class="chart-wrap"><canvas id="ptiChart"></canvas></div>
+      <div class="chart-annotation">The ratio crossed <strong>3.0x</strong> in the early 2000s bubble, briefly retreated, then surged past <strong>5.5x</strong> in 2022 before settling at 5.3x in 2023. For context, many housing economists consider <strong>3.0x</strong> the threshold for "affordable."</div>
+    </div>
+
+    <div class="chart-card fade-up" style="margin-top:1.5rem">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Years to Save for a 20% Down Payment</div>
+          <div class="chart-subtitle">Assuming 10% annual savings rate on median household income</div>
+        </div>
+        <span class="chart-badge badge-amber">10.6 years in 2023</span>
+      </div>
+      <div class="chart-wrap"><canvas id="downpayChart"></canvas></div>
+      <div class="chart-annotation">In 1984, a disciplined saver needed <strong>2.7 years</strong> to accumulate a 20% down payment. By 2023, that same goal required <strong>10.6 years</strong> — nearly half of a working decade spent just getting to the starting line.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FINDING 3: REGIONAL DISPARITIES ═══ -->
+<section class="alt-bg">
+  <div class="wrap">
+    <p class="section-label fade-up">Finding 03</p>
+    <h2 class="section-title fade-up">Your zip code determines<br>your <em>financial destiny.</em></h2>
+    <p class="body-text fade-up">The national numbers obscure enormous geographic variation. The South carries median incomes 22% below the West while home prices have converged nationally. States like Mississippi and Louisiana face affordability crises that make the national average look optimistic. Meanwhile, high-income coastal states face a different problem: prices have outrun even their elevated incomes.</p>
+
+    <div class="two-col fade-up" style="margin-top:2rem;gap:3rem;align-items:start">
+      <div>
+        <div class="chart-card" style="margin-top:0">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">Median Income by Region (2023)</div>
+              <div class="chart-subtitle">Census Bureau data — 50 states + DC</div>
+            </div>
+          </div>
+          <div class="region-bars" id="regionBars">
+            <div class="rb-item">
+              <div class="rb-top"><span class="rb-name">West</span><span class="rb-val">$88,740</span></div>
+              <div class="rb-track"><div class="rb-fill" data-w="100" style="background:linear-gradient(90deg,var(--accent),var(--periwinkle))"></div></div>
+            </div>
+            <div class="rb-item">
+              <div class="rb-top"><span class="rb-name">Northeast</span><span class="rb-val">$85,190</span></div>
+              <div class="rb-track"><div class="rb-fill" data-w="96" style="background:linear-gradient(90deg,var(--periwinkle),#a5b4fc)"></div></div>
+            </div>
+            <div class="rb-item">
+              <div class="rb-top"><span class="rb-name">Midwest</span><span class="rb-val">$80,275</span></div>
+              <div class="rb-track"><div class="rb-fill" data-w="90" style="background:linear-gradient(90deg,var(--amber),#fcd34d)"></div></div>
+            </div>
+            <div class="rb-item">
+              <div class="rb-top"><span class="rb-name">South</span><span class="rb-val">$69,100</span></div>
+              <div class="rb-track"><div class="rb-fill" data-w="78" style="background:linear-gradient(90deg,var(--danger),#fca5a5)"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="states-two">
+          <div>
+            <div class="state-list-title teal">Highest Income States (2023)</div>
+            <div class="state-row"><span class="state-name">D.C.</span><span class="state-income">$111,000</span></div>
+            <div class="state-row"><span class="state-name">Massachusetts</span><span class="state-income">$106,500</span></div>
+            <div class="state-row"><span class="state-name">Maryland</span><span class="state-income">$102,000</span></div>
+            <div class="state-row"><span class="state-name">Utah</span><span class="state-income">$101,200</span></div>
+            <div class="state-row"><span class="state-name">New Hampshire</span><span class="state-income">$98,780</span></div>
+            <div class="state-row"><span class="state-name">Colorado</span><span class="state-income">$96,640</span></div>
+          </div>
+          <div>
+            <div class="state-list-title amber">Lowest Income States (2023)</div>
+            <div class="state-row"><span class="state-name">Mississippi</span><span class="state-income">$55,060</span></div>
+            <div class="state-row"><span class="state-name">Louisiana</span><span class="state-income">$57,650</span></div>
+            <div class="state-row"><span class="state-name">West Virginia</span><span class="state-income">$60,410</span></div>
+            <div class="state-row"><span class="state-name">Alabama</span><span class="state-income">$60,660</span></div>
+            <div class="state-row"><span class="state-name">New Mexico</span><span class="state-income">$60,980</span></div>
+            <div class="state-row"><span class="state-name">Kentucky</span><span class="state-income">$61,980</span></div>
+          </div>
+        </div>
+        <p style="font-size:.78rem;color:var(--muted);margin-top:1.25rem;line-height:1.6">Mississippi's median income ($55K) against a $427K national median home price represents a <strong style="color:var(--danger)">7.7x PTI ratio</strong> — more than double the already-stretched national average.</p>
+      </div>
+    </div>
+
+    <div class="chart-card fade-up" style="margin-top:2.5rem">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Annual Housing Starts (1980–2025)</div>
+          <div class="chart-subtitle">New construction units (thousands) — the supply side of the crisis</div>
+        </div>
+        <span class="chart-badge badge-amber">Still below 2005 peak</span>
+      </div>
+      <div class="chart-wrap"><canvas id="startsChart"></canvas></div>
+      <div class="chart-annotation">The 2008 crash collapsed new construction from 2.07M starts to just 554K — and the industry never fully recovered. In 2024, starts remained at 1.37M, <strong>33% below the 2005 peak</strong>. Constrained supply has structurally elevated prices independent of demand cycles.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CONCLUSION ═══ -->
+<section>
+  <div class="wrap">
+    <p class="section-label fade-up">Conclusions</p>
+    <h2 class="section-title fade-up">What the data<br><em>actually says.</em></h2>
+    <p class="body-text fade-up">This isn't a story about one bad year or one bad policy. It's a 40-year structural shift driven by supply constraints, financialization of housing, falling rates that inflated prices, and demographic timing. The data points to four interlocking forces — and there's no single lever that fixes all of them.</p>
+
+    <div class="conclusion-grid fade-up">
+      <div class="concl-card">
+        <div class="concl-icon">📉</div>
+        <div class="concl-title">Supply Never Recovered</div>
+        <div class="concl-desc">Post-2008 construction collapsed and never returned to pre-crash levels. With 1.37M starts in 2024 against a growing population, the structural shortage compounds annually — adding to price pressure regardless of demand.</div>
+      </div>
+      <div class="concl-card">
+        <div class="concl-icon">📈</div>
+        <div class="concl-title">40 Years of Falling Rates Inflated Values</div>
+        <div class="concl-desc">Declining mortgage rates from 16% to 3% didn't just make homes more affordable — they enabled buyers to bid higher. When rates reversed in 2022, the math broke hard: prices stayed elevated while monthly payments soared.</div>
+      </div>
+      <div class="concl-card">
+        <div class="concl-icon">🗺️</div>
+        <div class="concl-title">Geography Amplifies Everything</div>
+        <div class="concl-desc">A $427K national median means very different things in Mississippi versus Colorado. Regional income disparities of $30K+ mean that affordability crises are distributed unevenly — the South faces a far steeper structural challenge.</div>
+      </div>
+      <div class="concl-card">
+        <div class="concl-icon">👥</div>
+        <div class="concl-title">Young Buyers Are Systemically Excluded</div>
+        <div class="concl-desc">Under-35 homeownership has flatlined for 30 years. Without inherited equity or family wealth for a down payment, first-time buyers face a 10.6-year saving timeline — during which rents also rise, making saving harder.</div>
+      </div>
+    </div>
+
+    <div style="margin-top:3rem" class="fade-up">
+      <div class="pull-quote">
+        <p>"Home prices quadrupled while incomes stagnated. Coastal states now see homes cost over 7 times the average annual household income. The affordability crisis isn't coming — it's been here for a decade."</p>
+        <cite>Key finding — U.S. Housing Affordability Project, 2024</cite>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FOOTER ═══ -->
+<footer>
+  <div>
+    <span style="font-family:'IBM Plex Mono',monospace">Ujwala Tripurana</span>
+    <span style="margin-left:1rem;font-size:.75rem">MS in AI &amp; Business Analytics · USF</span>
+  </div>
+  <div class="footer-links">
+    <a href="https://github.com/ujwalatripurana/us-housing-affordability" target="_blank">GitHub Repo</a>
+    <a href="index.html">Back to Portfolio</a>
+  </div>
+</footer>
+
+<script>
+// ── Progress bar ──────────────────────────────────────────────────────────
+const prog = document.getElementById('prog');
+window.addEventListener('scroll', () => {
+  const s = window.scrollY, max = document.documentElement.scrollHeight - window.innerHeight;
+  prog.style.width = (s / max * 100) + '%';
+  document.getElementById('navbar').classList.toggle('scrolled', s > 50);
+});
+
+// ── Fade-up observer ──────────────────────────────────────────────────────
+new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
+}, { threshold: 0.1 }).observe ? (() => {
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.fade-up').forEach(el => obs.observe(el));
+})() : null;
+
+// ── Region bars observer ──────────────────────────────────────────────────
+new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.querySelectorAll('.rb-fill').forEach((b, i) => {
+        setTimeout(() => { b.style.width = b.dataset.w + '%'; }, i * 120);
+      });
+    }
+  });
+}, { threshold: 0.3 }).observe(document.getElementById('regionBars'));
+
+// ── Chart defaults ────────────────────────────────────────────────────────
+Chart.defaults.color = '#7a8da6';
+Chart.defaults.font.family = "'DM Sans', sans-serif";
+Chart.defaults.font.size = 11;
+Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
+
+// ── DATA ──────────────────────────────────────────────────────────────────
+const years = [1984,1985,1986,1987,1988,1989,1990,1991,1992,1993,1994,1995,1996,1997,1998,1999,2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020,2021,2022,2023];
+const homePrices = [79950,84275,92025,104700,112225,120425,122300,119975,121375,126500,130425,133475,140250,145000,151925,160125,167550,173100,186025,192125,218150,236550,243750,244950,229550,215650,222700,224900,244400,266225,285775,294150,305125,322425,325275,320250,328150,383000,432950,426525];
+const incomes = [58930,60050,62280,63060,63530,64610,63830,61960,61450,61150,61800,63770,64710,66050,68470,70210,70020,68870,68310,68350,68250,69310,70080,71210,68780,68340,66730,65750,65740,68220,67360,71000,73520,74810,75790,81210,79560,79260,77540,80610];
+const pti = years.map((y,i) => +(homePrices[i]/incomes[i]).toFixed(2));
+const downpayYears = years.map((y,i) => +(homePrices[i]*0.20/(incomes[i]*0.10)).toFixed(1));
+
+// Index to 1984=100
+const priceIdx = homePrices.map(p => +(p/homePrices[0]*100).toFixed(1));
+const incomeIdx = incomes.map(inc => +(inc/incomes[0]*100).toFixed(1));
+
+
+
+// Housing starts 1980-2025
+const startYears = [1980,1981,1982,1983,1984,1985,1986,1987,1988,1989,1990,1991,1992,1993,1994,1995,1996,1997,1998,1999,2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025];
+const startVals = [1300,1096,1057,1705,1750,1742,1805,1621,1488,1376,1193,1014,1200,1288,1457,1354,1477,1474,1617,1641,1569,1603,1705,1848,1956,2068,1801,1355,906,554,587,612,781,925,1003,1112,1177,1205,1247,1292,1394,1605,1552,1421,1368,1393];
+
+// ── Chart 1: Price vs Income Divergence ──────────────────────────────────
+const divObs = new IntersectionObserver(entries => {
+  if (!entries[0].isIntersecting) return;
+  divObs.disconnect();
+  new Chart(document.getElementById('divergenceChart'), {
+    type: 'line',
+    data: {
+      labels: years,
+      datasets: [
+        {
+          label: 'Home Price Index',
+          data: priceIdx,
+          borderColor: '#f87171',
+          backgroundColor: 'rgba(248,113,113,0.06)',
+          borderWidth: 2.5,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          fill: false,
+          tension: 0.3,
+        },
+        {
+          label: 'Income Index',
+          data: incomeIdx,
+          borderColor: '#00e5c3',
+          backgroundColor: 'rgba(0,229,195,0.06)',
+          borderWidth: 2.5,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          fill: false,
+          tension: 0.3,
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      animation: { duration: 1600, easing: 'easeInOutQuart' },
+      plugins: {
+        legend: { position: 'top', labels: { usePointStyle: true, padding: 20, color: '#7a8da6' } },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${ctx.dataset.label}: ${ctx.raw} (base 100 = 1984)`
+          }
+        }
+      },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { maxTicksLimit: 8 } },
+        y: {
+          grid: { color: 'rgba(255,255,255,0.04)' },
+          ticks: { callback: v => v + ' ' },
+          title: { display: true, text: 'Index (1984 = 100)', color: '#7a8da6', font: { size: 10 } }
+        }
+      }
+    }
+  });
+}, { threshold: 0.2 });
+divObs.observe(document.getElementById('divergenceChart'));
+
+// ── Chart 2: PTI Ratio ───────────────────────────────────────────────────
+const ptiObs = new IntersectionObserver(entries => {
+  if (!entries[0].isIntersecting) return;
+  ptiObs.disconnect();
+  new Chart(document.getElementById('ptiChart'), {
+    type: 'line',
+    data: {
+      labels: years,
+      datasets: [{
+        label: 'Price-to-Income Ratio',
+        data: pti,
+        borderColor: '#00e5c3',
+        backgroundColor: 'rgba(0,229,195,0.08)',
+        borderWidth: 2.5,
+        pointRadius: 0,
+        pointHoverRadius: 5,
+        fill: true,
+        tension: 0.3,
+      }, {
+        label: 'Affordable threshold (3.0x)',
+        data: years.map(() => 3.0),
+        borderColor: 'rgba(245,158,11,0.5)',
+        borderWidth: 1.5,
+        borderDash: [6, 4],
+        pointRadius: 0,
+        fill: false,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      animation: { duration: 1600, easing: 'easeInOutQuart' },
+      plugins: {
+        legend: { position: 'top', labels: { usePointStyle: true, padding: 20, color: '#7a8da6' } },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.raw}x` } }
+      },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { maxTicksLimit: 8 } },
+        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { callback: v => v + 'x' }, min: 1, max: 6 }
+      }
+    }
+  });
+}, { threshold: 0.2 });
+ptiObs.observe(document.getElementById('ptiChart'));
+
+// ── Chart 3: Down Payment Years ──────────────────────────────────────────
+const dpObs = new IntersectionObserver(entries => {
+  if (!entries[0].isIntersecting) return;
+  dpObs.disconnect();
+  new Chart(document.getElementById('downpayChart'), {
+    type: 'bar',
+    data: {
+      labels: years,
+      datasets: [{
+        label: 'Years to Save for 20% Down',
+        data: downpayYears,
+        backgroundColor: years.map(y => y >= 2020 ? 'rgba(248,113,113,0.7)' : y >= 2010 ? 'rgba(245,158,11,0.55)' : 'rgba(0,229,195,0.45)'),
+        borderColor: years.map(y => y >= 2020 ? '#f87171' : y >= 2010 ? '#f59e0b' : '#00e5c3'),
+        borderWidth: 1,
+        borderRadius: 3,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      animation: { duration: 1400, easing: 'easeInOutQuart' },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.raw} years to save a 20% down payment` } }
+      },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { maxTicksLimit: 8 } },
+        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { callback: v => v + ' yrs' }, title: { display: true, text: 'Years', color: '#7a8da6', font: { size: 10 } } }
+      }
+    }
+  });
+}, { threshold: 0.2 });
+dpObs.observe(document.getElementById('downpayChart'));
+
+// ── Chart 5: Housing Starts ──────────────────────────────────────────────
+const startObs = new IntersectionObserver(entries => {
+  if (!entries[0].isIntersecting) return;
+  startObs.disconnect();
+  new Chart(document.getElementById('startsChart'), {
+    type: 'bar',
+    data: {
+      labels: startYears,
+      datasets: [{
+        label: 'Housing Starts (thousands)',
+        data: startVals,
+        backgroundColor: startYears.map(y => y >= 2022 ? 'rgba(245,158,11,0.6)' : y <= 2012 ? 'rgba(248,113,113,0.5)' : 'rgba(0,229,195,0.4)'),
+        borderColor: startYears.map(y => y >= 2022 ? '#f59e0b' : y <= 2012 ? '#f87171' : '#00e5c3'),
+        borderWidth: 1,
+        borderRadius: 3,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      animation: { duration: 1400, easing: 'easeInOutQuart' },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.raw}K housing starts` } }
+      },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { maxTicksLimit: 10 } },
+        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { callback: v => v + 'K' } }
+      }
+    }
+  });
+}, { threshold: 0.2 });
+startObs.observe(document.getElementById('startsChart'));
+</script>
+</body>
+</html>

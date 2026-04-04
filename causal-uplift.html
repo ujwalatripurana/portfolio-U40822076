@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Causal Uplift Modeling — Ujwala Tripurana</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@300;400;500;700;800&family=Fira+Code:wght@300;400;500&family=Lora:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg:        #08070f;
+  --bg2:       #0e0c1a;
+  --bg3:       #13102200;
+  --surface:   rgba(255,255,255,0.035);
+  --surface2:  rgba(255,255,255,0.06);
+  --border:    rgba(139,92,246,0.22);
+  --border-sub:rgba(255,255,255,0.07);
+  --text:      #ede9f8;
+  --muted:     #7068a0;
+  --violet:    #8b5cf6;
+  --violet-dim:rgba(139,92,246,0.12);
+  --violet-glow:rgba(139,92,246,0.3);
+  --lime:      #a3e635;
+  --lime-dim:  rgba(163,230,53,0.10);
+  --amber:     #fbbf24;
+  --amber-dim: rgba(251,191,36,0.10);
+  --red:       #f87171;
+  --teal:      #2dd4bf;
+  --radius:    12px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Cabinet Grotesk',sans-serif;font-size:16px;line-height:1.65;overflow-x:hidden}
+
+/* ── Progress ── */
+#prog{position:fixed;top:0;left:0;height:2px;width:0%;background:linear-gradient(90deg,var(--violet),var(--teal));z-index:999}
+
+/* ── Nav ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:900;height:58px;display:flex;align-items:center;padding:0 2rem;justify-content:space-between;transition:background .3s;border-bottom:1px solid transparent}
+nav.scrolled{background:rgba(8,7,15,.92);backdrop-filter:blur(20px);border-color:var(--border-sub)}
+.nav-back{display:flex;align-items:center;gap:.5rem;color:var(--muted);text-decoration:none;font-size:.85rem;font-weight:500;transition:color .2s}
+.nav-back:hover{color:var(--violet)}
+.nav-back:hover svg{transform:translateX(-3px)}
+.nav-back svg{transition:transform .2s}
+.nav-tag{font-family:'Fira Code',monospace;font-size:.65rem;color:var(--violet);letter-spacing:.1em;border:1px solid var(--border);padding:.28rem .8rem;border-radius:999px;background:var(--violet-dim);text-transform:uppercase}
+
+/* ── Hero ── */
+#hero{min-height:100vh;display:flex;align-items:center;padding:90px 2rem 5rem;position:relative;overflow:hidden}
+.hero-mesh{position:absolute;inset:0;background:
+  radial-gradient(ellipse 70% 55% at 15% 60%, rgba(139,92,246,.07) 0%, transparent 65%),
+  radial-gradient(ellipse 50% 40% at 85% 25%, rgba(45,212,191,.05) 0%, transparent 60%),
+  radial-gradient(ellipse 40% 60% at 50% 90%, rgba(139,92,246,.04) 0%, transparent 60%);
+  pointer-events:none}
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(139,92,246,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(139,92,246,.025) 1px,transparent 1px);background-size:72px 72px;mask-image:radial-gradient(ellipse at 50% 50%,black 20%,transparent 75%)}
+.hero-inner{max-width:1100px;margin:0 auto;width:100%;position:relative;z-index:1;display:grid;grid-template-columns:1fr 400px;gap:4rem;align-items:center}
+@media(max-width:860px){.hero-inner{grid-template-columns:1fr;gap:3rem}}
+
+.hero-kicker{font-family:'Fira Code',monospace;font-size:.68rem;letter-spacing:.2em;color:var(--violet);text-transform:uppercase;margin-bottom:1.5rem;opacity:0;animation:fadeUp .7s .15s both;display:flex;align-items:center;gap:.75rem}
+.hero-kicker::before{content:'';display:inline-block;width:24px;height:1px;background:var(--violet)}
+h1{font-family:'Lora',serif;font-size:clamp(2.8rem,6vw,5rem);font-weight:600;line-height:1.05;letter-spacing:-.02em;margin-bottom:1.5rem;opacity:0;animation:fadeUp .8s .28s both}
+h1 em{font-style:italic;font-weight:400;color:var(--violet)}
+.hero-desc{font-size:1rem;color:var(--muted);max-width:520px;margin-bottom:2.5rem;line-height:1.85;opacity:0;animation:fadeUp .7s .42s both}
+.hero-desc strong{color:var(--text);font-weight:600}
+.hero-pills{display:flex;gap:.6rem;flex-wrap:wrap;opacity:0;animation:fadeUp .7s .55s both}
+.pill{font-family:'Fira Code',monospace;font-size:.6rem;letter-spacing:.06em;padding:.28rem .75rem;border-radius:999px;border:1px solid}
+.pill-v{color:var(--violet);border-color:var(--border);background:var(--violet-dim)}
+.pill-l{color:var(--lime);border-color:rgba(163,230,53,.2);background:var(--lime-dim)}
+.pill-t{color:var(--teal);border-color:rgba(45,212,191,.2);background:rgba(45,212,191,.07)}
+
+/* ── Segment donut panel ── */
+.segment-panel{background:var(--bg2);border:1px solid var(--border-sub);border-radius:var(--radius);overflow:hidden;opacity:0;animation:fadeUp .9s .5s both;position:relative}
+.segment-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--violet),transparent)}
+.sp-header{padding:.75rem 1.2rem;border-bottom:1px solid var(--border-sub);display:flex;align-items:center;justify-content:space-between}
+.sp-title{font-family:'Fira Code',monospace;font-size:.65rem;color:var(--muted);letter-spacing:.1em}
+.sp-badge{font-family:'Fira Code',monospace;font-size:.6rem;color:var(--lime);letter-spacing:.06em;border:1px solid rgba(163,230,53,.25);padding:.2rem .6rem;border-radius:999px;background:var(--lime-dim)}
+.sp-chart-wrap{padding:1.25rem;display:flex;align-items:center;gap:1.5rem}
+.sp-donut{position:relative;width:130px;height:130px;flex-shrink:0}
+.sp-donut canvas{width:130px!important;height:130px!important}
+.sp-legend{display:flex;flex-direction:column;gap:.55rem;flex:1}
+.sp-leg-item{display:flex;align-items:center;gap:.6rem;font-size:.78rem}
+.sp-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+.sp-leg-name{color:var(--text);font-weight:500;flex:1}
+.sp-leg-pct{font-family:'Fira Code',monospace;font-size:.7rem;color:var(--muted)}
+.sp-stats{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--border-sub)}
+.sp-stat{padding:.75rem 1.1rem;display:flex;flex-direction:column;gap:.2rem;border-right:1px solid var(--border-sub)}
+.sp-stat:last-child{border-right:none}
+.sp-val{font-family:'Fira Code',monospace;font-size:1.15rem;font-weight:500;line-height:1}
+.sp-val.v{color:var(--violet)}
+.sp-val.l{color:var(--lime)}
+.sp-key{font-size:.6rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-top:.15rem}
+
+/* ── Sections ── */
+section{padding:6rem 2rem}
+.wrap{max-width:1000px;margin:0 auto}
+.sec-label{font-family:'Fira Code',monospace;font-size:.62rem;letter-spacing:.2em;color:var(--violet);text-transform:uppercase;margin-bottom:.75rem;display:flex;align-items:center;gap:.6rem}
+.sec-label::before{content:'';display:inline-block;width:16px;height:1px;background:var(--violet)}
+h2{font-family:'Lora',serif;font-size:clamp(2rem,4.5vw,3.2rem);font-weight:600;letter-spacing:-.02em;line-height:1.1;margin-bottom:1.5rem}
+h2 em{font-style:italic;font-weight:400;color:var(--violet)}
+.body-text{color:var(--muted);font-size:.97rem;line-height:1.85;max-width:660px}
+.body-text strong{color:var(--text);font-weight:600}
+.alt{background:var(--bg2)}
+
+/* ── Pull quote ── */
+.pull-quote{border-left:2px solid var(--violet);padding:1.1rem 1.4rem;background:var(--violet-dim);border-radius:0 var(--radius) var(--radius) 0;margin:2rem 0}
+.pull-quote p{font-family:'Lora',serif;font-size:1.15rem;font-style:italic;font-weight:400;color:var(--text);line-height:1.6}
+.pull-quote cite{display:block;font-family:'Fira Code',monospace;font-size:.65rem;color:var(--violet);margin-top:.6rem;font-style:normal;letter-spacing:.06em}
+
+/* ── Metric cards ── */
+.metrics-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-top:2.5rem}
+@media(max-width:800px){.metrics-row{grid-template-columns:repeat(2,1fr)}}
+.mc{background:var(--surface);border:1px solid var(--border-sub);border-radius:var(--radius);padding:1.4rem;transition:border-color .3s,transform .3s;position:relative;overflow:hidden}
+.mc::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--mc-color,var(--violet));transform:scaleX(0);transform-origin:left;transition:transform .5s}
+.mc:hover{border-color:var(--border);transform:translateY(-3px)}
+.mc:hover::after{transform:scaleX(1)}
+.mc-val{font-family:'Fira Code',monospace;font-size:1.9rem;font-weight:500;line-height:1;margin-bottom:.35rem}
+.mc-label{font-size:.78rem;color:var(--muted);line-height:1.5}
+.mc-sub{font-family:'Fira Code',monospace;font-size:.58rem;color:var(--muted);margin-top:.5rem;opacity:.65}
+
+/* ── Chart cards ── */
+.chart-card{background:var(--surface);border:1px solid var(--border-sub);border-radius:var(--radius);padding:1.75rem;margin-top:2rem;transition:border-color .3s}
+.chart-card:hover{border-color:var(--border)}
+.cc-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.5rem;gap:1rem;flex-wrap:wrap}
+.cc-title{font-family:'Lora',serif;font-size:1.25rem;font-weight:600;color:var(--text)}
+.cc-sub{font-size:.78rem;color:var(--muted);margin-top:.2rem}
+.cc-badge{font-family:'Fira Code',monospace;font-size:.6rem;letter-spacing:.08em;padding:.28rem .75rem;border-radius:999px;border:1px solid;white-space:nowrap}
+.badge-v{color:var(--violet);border-color:var(--border);background:var(--violet-dim)}
+.badge-l{color:var(--lime);border-color:rgba(163,230,53,.25);background:var(--lime-dim)}
+.badge-a{color:var(--amber);border-color:rgba(251,191,36,.25);background:var(--amber-dim)}
+.chart-wrap{position:relative;height:300px}
+.chart-note{font-size:.75rem;color:var(--muted);margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border-sub);line-height:1.6}
+.chart-note strong{color:var(--violet)}
+
+/* ── Two col ── */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:2rem}
+@media(max-width:720px){.two-col{grid-template-columns:1fr}}
+
+/* ── Segment cards ── */
+.seg-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-top:2rem}
+@media(max-width:800px){.seg-grid{grid-template-columns:repeat(2,1fr)}}
+.seg-card{border-radius:var(--radius);padding:1.4rem;border:1px solid;transition:transform .3s}
+.seg-card:hover{transform:translateY(-3px)}
+.seg-card.persuadable{background:rgba(163,230,53,.06);border-color:rgba(163,230,53,.25)}
+.seg-card.sure-thing{background:rgba(139,92,246,.07);border-color:rgba(139,92,246,.3)}
+.seg-card.lost-cause{background:rgba(248,113,113,.05);border-color:rgba(248,113,113,.2)}
+.seg-card.dnd{background:rgba(251,191,36,.05);border-color:rgba(251,191,36,.2)}
+.seg-icon{font-size:1.4rem;margin-bottom:.6rem}
+.seg-name{font-weight:700;font-size:.95rem;margin-bottom:.3rem}
+.seg-name.persuadable{color:var(--lime)}
+.seg-name.sure-thing{color:var(--violet)}
+.seg-name.lost-cause{color:var(--red)}
+.seg-name.dnd{color:var(--amber)}
+.seg-pct{font-family:'Fira Code',monospace;font-size:1.5rem;font-weight:500;line-height:1;margin-bottom:.4rem}
+.seg-desc{font-size:.78rem;color:var(--muted);line-height:1.6}
+.seg-action{font-family:'Fira Code',monospace;font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;margin-top:.6rem;padding:.2rem .6rem;border-radius:4px;display:inline-block}
+.seg-action.target{background:rgba(163,230,53,.15);color:var(--lime)}
+.seg-action.skip{background:rgba(248,113,113,.12);color:var(--red)}
+.seg-action.efficient{background:rgba(139,92,246,.15);color:var(--violet)}
+.seg-action.protect{background:rgba(251,191,36,.12);color:var(--amber)}
+
+/* ── ROAS comparison ── */
+.roas-compare{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-top:2rem}
+@media(max-width:600px){.roas-compare{grid-template-columns:1fr}}
+.roas-card{border-radius:var(--radius);padding:1.75rem;position:relative;overflow:hidden}
+.roas-card.before{background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.2)}
+.roas-card.after{background:rgba(163,230,53,.06);border:1px solid rgba(163,230,53,.25)}
+.roas-label{font-family:'Fira Code',monospace;font-size:.62rem;text-transform:uppercase;letter-spacing:.14em;margin-bottom:.75rem}
+.roas-label.before{color:var(--red)}
+.roas-label.after{color:var(--lime)}
+.roas-val{font-family:'Fira Code',monospace;font-size:3.5rem;font-weight:500;line-height:1;margin-bottom:.5rem}
+.roas-val.before{color:var(--red)}
+.roas-val.after{color:var(--lime)}
+.roas-desc{font-size:.82rem;color:var(--muted);line-height:1.6}
+.roas-sub{font-family:'Fira Code',monospace;font-size:.68rem;margin-top:.75rem;padding:.4rem .75rem;border-radius:6px;display:inline-block}
+.roas-sub.before{background:rgba(248,113,113,.1);color:var(--red)}
+.roas-sub.after{background:rgba(163,230,53,.12);color:var(--lime)}
+
+/* ── HITL flags ── */
+.hitl-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-top:1.5rem}
+@media(max-width:700px){.hitl-grid{grid-template-columns:1fr}}
+.hitl-card{background:var(--surface);border:1px solid var(--border-sub);border-radius:var(--radius);padding:1.2rem;transition:border-color .3s}
+.hitl-card:hover{border-color:var(--border)}
+.hitl-flag{font-family:'Fira Code',monospace;font-size:.65rem;letter-spacing:.08em;margin-bottom:.5rem;padding:.2rem .6rem;border-radius:4px;display:inline-block}
+.hitl-flag.borderline{background:rgba(251,191,36,.12);color:var(--amber)}
+.hitl-flag.high{background:rgba(248,113,113,.1);color:var(--red)}
+.hitl-flag.dnd{background:rgba(45,212,191,.1);color:var(--teal)}
+.hitl-title{font-weight:600;font-size:.88rem;margin-bottom:.3rem;color:var(--text)}
+.hitl-desc{font-size:.78rem;color:var(--muted);line-height:1.6}
+.hitl-pct{font-family:'Fira Code',monospace;font-size:1.3rem;font-weight:500;color:var(--text);margin-bottom:.25rem}
+
+/* ── Fairness table ── */
+.fairness-table{width:100%;border-collapse:collapse;margin-top:1.5rem;font-size:.82rem}
+.fairness-table th{font-family:'Fira Code',monospace;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:.6rem 1rem;border-bottom:1px solid var(--border-sub);text-align:left}
+.fairness-table td{padding:.7rem 1rem;border-bottom:1px solid rgba(255,255,255,.04)}
+.fairness-table tr:hover td{background:rgba(255,255,255,.02)}
+.fair-pass{color:var(--lime);font-weight:600}
+.fair-fail{color:var(--amber)}
+
+/* ── Conclusion cards ── */
+.concl-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-top:2rem}
+@media(max-width:650px){.concl-grid{grid-template-columns:1fr}}
+.concl-card{background:var(--surface);border:1px solid var(--border-sub);border-radius:var(--radius);padding:1.5rem;transition:border-color .3s,transform .2s}
+.concl-card:hover{border-color:var(--border);transform:translateY(-2px)}
+.concl-icon{font-size:1.25rem;margin-bottom:.6rem}
+.concl-title{font-weight:700;font-size:.95rem;margin-bottom:.4rem}
+.concl-body{font-size:.82rem;color:var(--muted);line-height:1.7}
+
+/* ── Footer ── */
+footer{border-top:1px solid var(--border-sub);padding:2rem;display:flex;justify-content:space-between;align-items:center;font-size:.8rem;color:var(--muted);flex-wrap:wrap;gap:1rem}
+.footer-links{display:flex;gap:1.5rem}
+.footer-links a{color:var(--muted);text-decoration:none;transition:color .2s}
+.footer-links a:hover{color:var(--violet)}
+
+/* ── Fade-up ── */
+.fade-up{opacity:0;transform:translateY(24px);transition:opacity .7s cubic-bezier(.4,0,.2,1),transform .7s cubic-bezier(.4,0,.2,1)}
+.fade-up.visible{opacity:1;transform:none}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:rgba(139,92,246,.25);border-radius:999px}
+::selection{background:rgba(139,92,246,.3)}
+</style>
+</head>
+<body>
+
+<div id="prog"></div>
+
+<nav id="navbar">
+  <a href="index.html" class="nav-back">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M5 12l7-7M5 12l7 7"/></svg>
+    Back to Portfolio
+  </a>
+  <span class="nav-tag">Causal AI · Marketing</span>
+</nav>
+
+<!-- ═══ HERO ═══ -->
+<section id="hero">
+  <div class="hero-mesh"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-inner">
+    <div>
+      <div class="hero-kicker">Causal Uplift Modeling · Criteo Dataset · 500K Records</div>
+      <h1>Not who converts.<br><em>Who converts<br>because of you.</em></h1>
+      <p class="hero-desc">
+        Traditional ad targeting wastes spend on people who'd buy anyway. This causal ML system estimates <strong>individual treatment effects</strong> — isolating the users whose behavior actually changes when shown an ad — lifting ROAS from <strong>2.44x → 9.60x</strong> while cutting spend by 75%.
+      </p>
+      <div class="hero-pills">
+        <span class="pill pill-v">CausalML · X-Learner</span>
+        <span class="pill pill-v">LightGBM · XGBoost</span>
+        <span class="pill pill-l">64% AUUC Improvement</span>
+        <span class="pill pill-t">SHAP Explainability</span>
+        <span class="pill pill-v">IPW Bias Correction</span>
+        <span class="pill pill-l">Fairness Validation</span>
+      </div>
+    </div>
+
+    <!-- Segment donut panel -->
+    <div class="segment-panel">
+      <div class="sp-header">
+        <span class="sp-title">user segments · 75K val set</span>
+        <span class="sp-badge">X-LEARNER</span>
+      </div>
+      <div class="sp-chart-wrap">
+        <div class="sp-donut"><canvas id="donutChart"></canvas></div>
+        <div class="sp-legend">
+          <div class="sp-leg-item"><div class="sp-dot" style="background:#8b5cf6"></div><span class="sp-leg-name">Sure Thing</span><span class="sp-leg-pct">50.6%</span></div>
+          <div class="sp-leg-item"><div class="sp-dot" style="background:#a3e635"></div><span class="sp-leg-name">Persuadable</span><span class="sp-leg-pct">25.0%</span></div>
+          <div class="sp-leg-item"><div class="sp-dot" style="background:#f87171"></div><span class="sp-leg-name">Lost Cause</span><span class="sp-leg-pct">14.3%</span></div>
+          <div class="sp-leg-item"><div class="sp-dot" style="background:#fbbf24"></div><span class="sp-leg-name">Do-Not-Disturb</span><span class="sp-leg-pct">10.1%</span></div>
+        </div>
+      </div>
+      <div class="sp-stats">
+        <div class="sp-stat">
+          <div class="sp-val v">9.60x</div>
+          <div class="sp-key">Model ROAS</div>
+        </div>
+        <div class="sp-stat">
+          <div class="sp-val l">75%</div>
+          <div class="sp-key">Spend Saved</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ THE PROBLEM ═══ -->
+<section class="alt">
+  <div class="wrap">
+    <div class="sec-label fade-up">The Problem</div>
+    <h2 class="fade-up">Ads that go to<br><em>the wrong people.</em></h2>
+    <div class="two-col">
+      <div>
+        <p class="body-text fade-up">Standard conversion-rate targeting is blind to causality. It identifies users likely to convert — but that includes people who would have bought anyway, and misses people who only buy <em>when prompted</em>. The result is wasted budget on <strong>Sure Things</strong> and <strong>Do-Not-Disturbs</strong>, while <strong>Persuadables</strong> — the users where ads actually change behavior — go untargeted.</p>
+        <div class="pull-quote fade-up">
+          <p>"At 0.294% conversion and a 339:1 class imbalance, finding the signal required IPW bias correction, propensity clipping, and scale_pos_weight=339 just to train a model that sees the minority class."</p>
+          <cite>Training details — model_card.json</cite>
+        </div>
+      </div>
+      <div class="fade-up">
+        <div class="metrics-row" style="grid-template-columns:1fr 1fr;margin-top:0">
+          <div class="mc" style="--mc-color:var(--violet)">
+            <div class="mc-val" style="color:var(--violet)">500K</div>
+            <div class="mc-label">Records from Criteo 14M RCT dataset</div>
+            <div class="mc-sub">85/15 TREATMENT SPLIT</div>
+          </div>
+          <div class="mc" style="--mc-color:var(--amber)">
+            <div class="mc-val" style="color:var(--amber)">339:1</div>
+            <div class="mc-label">Class imbalance — 0.294% conversion rate</div>
+            <div class="mc-sub">scale_pos_weight=339</div>
+          </div>
+          <div class="mc" style="--mc-color:var(--lime)">
+            <div class="mc-val" style="color:var(--lime)">64%</div>
+            <div class="mc-label">AUUC improvement over S/T-Learner baseline</div>
+            <div class="mc-sub">X-LEARNER + IPW</div>
+          </div>
+          <div class="mc" style="--mc-color:var(--teal)">
+            <div class="mc-val" style="color:var(--teal)">$42K</div>
+            <div class="mc-label">Net profit per 1.5M-user campaign cycle</div>
+            <div class="mc-sub">STANDARD RULE</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ THE MODEL ═══ -->
+<section>
+  <div class="wrap">
+    <div class="sec-label fade-up">Modeling</div>
+    <h2 class="fade-up">From correlation<br><em>to causation.</em></h2>
+    <p class="body-text fade-up">The X-Learner with IPW bias correction is the core innovation. Unlike S/T-Learners that treat uplift as a simple difference, the X-Learner cross-estimates treatment effects — using the control model to impute counterfactual outcomes for treated users and vice versa. This dramatically improves ITE estimation on imbalanced RCT data.</p>
+
+    <!-- Qini / Uplift curve -->
+    <div class="chart-card fade-up">
+      <div class="cc-header">
+        <div>
+          <div class="cc-title">Qini Uplift Curve — X-Learner vs Random Targeting</div>
+          <div class="cc-sub">Cumulative incremental conversions as % of population targeted · 75K validation set</div>
+        </div>
+        <span class="cc-badge badge-l">Top 25% captures 98% of conversions</span>
+      </div>
+      <div class="chart-wrap"><canvas id="qiniChart"></canvas></div>
+      <div class="chart-note">Targeting the <strong>top 25% by predicted uplift</strong> (τ) captures nearly all incremental conversions while reaching only a quarter of users. The curve peaks around the 50th percentile — beyond that, adding more users starts including <strong>Do-Not-Disturbs</strong> who respond negatively.</div>
+    </div>
+
+    <!-- Tau distribution -->
+    <div class="chart-card fade-up">
+      <div class="cc-header">
+        <div>
+          <div class="cc-title">Individual Treatment Effect (τ) Distribution</div>
+          <div class="cc-sub">Predicted uplift scores across 75K validation users</div>
+        </div>
+        <span class="cc-badge badge-v">mean τ = 0.052</span>
+      </div>
+      <div class="chart-wrap" style="height:240px"><canvas id="tauChart"></canvas></div>
+      <div class="chart-note">Most users cluster near <strong>τ ≈ 0</strong> — the ad doesn't change their behavior. The long right tail (τ > 0.3) are high-confidence Persuadables. The left tail (τ < 0) are Do-Not-Disturbs — users who convert <em>less</em> when shown ads.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ SEGMENTS ═══ -->
+<section class="alt">
+  <div class="wrap">
+    <div class="sec-label fade-up">Targeting Strategy</div>
+    <h2 class="fade-up">Four segments.<br><em>One right answer each.</em></h2>
+    <p class="body-text fade-up">The model segments every user into one of four behavioral archetypes based on their estimated treatment effect τ. Each archetype demands a different action — and conflating them is exactly the mistake traditional targeting makes.</p>
+
+    <div class="seg-grid fade-up">
+      <div class="seg-card persuadable">
+        <div class="seg-icon">🎯</div>
+        <div class="seg-name persuadable">Persuadable</div>
+        <div class="seg-pct" style="color:var(--lime)">25%</div>
+        <div class="seg-desc">Convert <em>because</em> of the ad. High τ, low baseline. The only group where ad spend is causally justified.</div>
+        <span class="seg-action target">→ TARGET</span>
+      </div>
+      <div class="seg-card sure-thing">
+        <div class="seg-icon">✅</div>
+        <div class="seg-name sure-thing">Sure Thing</div>
+        <div class="seg-pct" style="color:var(--violet)">50.6%</div>
+        <div class="seg-desc">Would buy anyway. Showing them an ad wastes budget — they don't need convincing.</div>
+        <span class="seg-action efficient">→ SKIP / EFFICIENT</span>
+      </div>
+      <div class="seg-card lost-cause">
+        <div class="seg-icon">❌</div>
+        <div class="seg-name lost-cause">Lost Cause</div>
+        <div class="seg-pct" style="color:var(--red)">14.3%</div>
+        <div class="seg-desc">Won't convert regardless of treatment. Low τ, low baseline. No ROI upside.</div>
+        <span class="seg-action skip">→ SKIP</span>
+      </div>
+      <div class="seg-card dnd">
+        <div class="seg-icon">🚫</div>
+        <div class="seg-name dnd">Do-Not-Disturb</div>
+        <div class="seg-pct" style="color:var(--amber)">10.1%</div>
+        <div class="seg-desc">Negative τ — ads actively <em>reduce</em> conversion probability. Targeting these users costs money and loses sales.</div>
+        <span class="seg-action protect">→ PROTECT</span>
+      </div>
+    </div>
+
+    <!-- ROAS before/after -->
+    <div class="roas-compare fade-up">
+      <div class="roas-card before">
+        <div class="roas-label before">Before — Target All</div>
+        <div class="roas-val before">2.44x</div>
+        <div class="roas-desc">Targeting 1.5M users indiscriminately. Budget spent on Sure Things and Do-Not-Disturbs who don't need ads.</div>
+        <span class="roas-sub before">$19,500 spend · 1,588 incr. conversions</span>
+      </div>
+      <div class="roas-card after">
+        <div class="roas-label after">After — Top 25% τ</div>
+        <div class="roas-val after">9.60x</div>
+        <div class="roas-desc">Targeting only 374K users with the highest predicted uplift. 98% of incremental conversions retained.</div>
+        <span class="roas-sub after">$4,874 spend · 1,559 incr. conversions</span>
+      </div>
+    </div>
+
+    <!-- Budget strategies chart -->
+    <div class="chart-card fade-up">
+      <div class="cc-header">
+        <div>
+          <div class="cc-title">Budget Strategy Comparison</div>
+          <div class="cc-sub">ROAS vs spend across four targeting strategies · 1.5M user campaign</div>
+        </div>
+        <span class="cc-badge badge-a">Strict Rule hits 12.9x ROAS</span>
+      </div>
+      <div class="chart-wrap" style="height:260px"><canvas id="strategyChart"></canvas></div>
+      <div class="chart-note">The <strong>Strict Rule (top 15%)</strong> achieves 12.9x ROAS but captures fewer conversions. The <strong>Standard Rule (top 25%)</strong> is the optimal balance — strong ROAS with near-complete conversion capture. Budget Rule extends reach with diminishing returns.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ HUMAN IN THE LOOP + FAIRNESS ═══ -->
+<section>
+  <div class="wrap">
+    <div class="sec-label fade-up">Governance</div>
+    <h2 class="fade-up">~80% automated.<br><em>The rest, reviewed.</em></h2>
+    <p class="body-text fade-up">Not every decision should be automated. The system flags edge cases for human review — borderline scores, anomalously high uplift predictions, and users at risk of being misclassified as Do-Not-Disturb. Only clearly confident decisions are auto-approved.</p>
+
+    <div class="hitl-grid fade-up">
+      <div class="hitl-card">
+        <span class="hitl-flag borderline">BORDERLINE</span>
+        <div class="hitl-pct">81.4%</div>
+        <div class="hitl-title">Near-Threshold Users</div>
+        <div class="hitl-desc">τ within 0.5 std of the targeting threshold. Small model uncertainty could flip the decision — sent for human review.</div>
+      </div>
+      <div class="hitl-card">
+        <span class="hitl-flag high">HIGH_UPLIFT_CHECK</span>
+        <div class="hitl-pct">3.2%</div>
+        <div class="hitl-title">Anomalously High τ</div>
+        <div class="hitl-desc">Predicted uplift exceeds mean + 3σ. Could be genuine high-value users or model extrapolation errors — flagged for verification.</div>
+      </div>
+      <div class="hitl-card">
+        <span class="hitl-flag dnd">DND_RISK</span>
+        <div class="hitl-pct">6.7%</div>
+        <div class="hitl-title">Do-Not-Disturb Risk</div>
+        <div class="hitl-desc">Negative τ detected. Protecting these users from ads prevents conversion loss — reviewed to confirm before suppression.</div>
+      </div>
+    </div>
+
+    <div class="chart-card fade-up" style="margin-top:2.5rem">
+      <div class="cc-header">
+        <div>
+          <div class="cc-title">Fairness Validation — Disparate Impact Audit</div>
+          <div class="cc-sub">80% DI rule applied across 4 behavioral segments · Lo et al. (2024) framework</div>
+        </div>
+        <span class="cc-badge badge-v">1/4 segments pass · Audit recommended</span>
+      </div>
+      <table class="fairness-table">
+        <thead>
+          <tr>
+            <th>Segment</th>
+            <th>Disparate Impact</th>
+            <th>Statistical Parity</th>
+            <th>80% Rule</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Behavioral Signal 1</td>
+            <td>0.237</td>
+            <td>0.308</td>
+            <td class="fair-fail">FAIL</td>
+            <td>⚠️ Bias detected</td>
+          </tr>
+          <tr>
+            <td>Behavioral Signal 2</td>
+            <td>1.000</td>
+            <td>0.000</td>
+            <td class="fair-pass">PASS</td>
+            <td>✅ Fair</td>
+          </tr>
+          <tr>
+            <td>Behavioral Signal 3</td>
+            <td>0.392</td>
+            <td>0.192</td>
+            <td class="fair-fail">FAIL</td>
+            <td>⚠️ Bias detected</td>
+          </tr>
+          <tr>
+            <td>Engagement Level</td>
+            <td>0.682</td>
+            <td>0.095</td>
+            <td class="fair-fail">FAIL</td>
+            <td>⚠️ Bias detected</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="chart-note" style="margin-top:1rem">Fairness validation is a <strong>first-class output</strong>, not an afterthought. The model card explicitly flags that 3 of 4 segments require a demographic audit before production deployment — a standard no real system should skip.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CONCLUSIONS ═══ -->
+<section class="alt">
+  <div class="wrap">
+    <div class="sec-label fade-up">Key Takeaways</div>
+    <h2 class="fade-up">What the causal<br><em>lens changes.</em></h2>
+    <div class="concl-grid fade-up">
+      <div class="concl-card">
+        <div class="concl-icon">🧠</div>
+        <div class="concl-title">Correlation ≠ Causation in Targeting</div>
+        <div class="concl-body">A user likely to convert is not the same as a user who converts <em>because</em> of an ad. Conflating these two signals is the core mistake in standard ML-based ad targeting — and it's expensive.</div>
+      </div>
+      <div class="concl-card">
+        <div class="concl-icon">⚖️</div>
+        <div class="concl-title">IPW Matters at Scale</div>
+        <div class="concl-body">The Criteo dataset has an 85/15 treatment split that biases naive ITE estimates. IPW with propensity clipping [0.05, 0.95] corrects this — without it, the X-Learner's 64% AUUC gain shrinks to near-zero.</div>
+      </div>
+      <div class="concl-card">
+        <div class="concl-icon">🛡️</div>
+        <div class="concl-title">Do-Not-Disturb Is a Revenue Signal</div>
+        <div class="concl-body">The 10.1% DND population isn't just a waste — it's a loss. Targeting them actively reduces conversions. Protecting them is both ethical and financially optimal.</div>
+      </div>
+      <div class="concl-card">
+        <div class="concl-icon">📋</div>
+        <div class="concl-title">Fairness Before Deployment</div>
+        <div class="concl-body">The model card explicitly scopes out credit scoring and employment decisions, and flags 3 of 4 segments for demographic audit. Responsible AI isn't a checkbox — it's an output you ship alongside the model.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div>
+    <span style="font-family:'Cabinet Grotesk',sans-serif;font-weight:700">Ujwala Tripurana</span>
+    <span style="margin-left:1rem;font-size:.75rem">MS in AI &amp; Business Analytics · USF</span>
+  </div>
+  <div class="footer-links">
+    <a href="https://github.com/ujwalatripurana/causal-uplift-modeling" target="_blank">GitHub Repo</a>
+    <a href="index.html">Back to Portfolio</a>
+  </div>
+</footer>
+
+<script>
+// ── Progress + Nav ────────────────────────────────────────────────────────
+window.addEventListener('scroll', () => {
+  const s = window.scrollY, max = document.documentElement.scrollHeight - window.innerHeight;
+  document.getElementById('prog').style.width = (s / max * 100) + '%';
+  document.getElementById('navbar').classList.toggle('scrolled', s > 50);
+});
+
+// ── Fade-up ───────────────────────────────────────────────────────────────
+const fadeObs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.1 });
+document.querySelectorAll('.fade-up').forEach(el => fadeObs.observe(el));
+
+// ── Chart defaults ────────────────────────────────────────────────────────
+Chart.defaults.color = '#7068a0';
+Chart.defaults.font.family = "'Cabinet Grotesk', sans-serif";
+Chart.defaults.font.size = 11;
+Chart.defaults.borderColor = 'rgba(255,255,255,0.05)';
+
+// ── Donut: Segments ───────────────────────────────────────────────────────
+new Chart(document.getElementById('donutChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Sure Thing', 'Persuadable', 'Lost Cause', 'Do-Not-Disturb'],
+    datasets: [{
+      data: [50.6, 25.0, 14.3, 10.1],
+      backgroundColor: ['rgba(139,92,246,.75)', 'rgba(163,230,53,.75)', 'rgba(248,113,113,.65)', 'rgba(251,191,36,.65)'],
+      borderColor: ['#8b5cf6', '#a3e635', '#f87171', '#fbbf24'],
+      borderWidth: 1.5,
+      hoverOffset: 6,
+    }]
+  },
+  options: {
+    responsive: false,
+    cutout: '68%',
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw}%` } } }
+  }
+});
+
+// ── Qini Uplift Curve ─────────────────────────────────────────────────────
+const qiniObs = new IntersectionObserver(entries => {
+  if (!entries[0].isIntersecting) return;
+  qiniObs.disconnect();
+
+  // Real data from val_predictions (computed from actual tau scores)
+  const pcts   = [0,  5,   10,  15,  20,  25,  30,  40,  50,  60,  70,  80,  90,  100];
+  const model  = [0, 47.3, 53.9,62.5,69.6,78.0,83.2,88.1,90.0,79.1,83.5,84.9,89.7,79.4];
+  const random = pcts.map(p => p / 100 * 79.4); // linear random baseline
+
+  new Chart(document.getElementById('qiniChart'), {
+    type: 'line',
+    data: {
+      labels: pcts.map(p => p + '%'),
+      datasets: [
+        {
+          label: 'X-Learner (Model)',
+          data: model,
+          borderColor: '#a3e635',
+          backgroundColor: 'rgba(163,230,53,0.07)',
+          borderWidth: 2.5,
+          pointRadius: 3,
+          pointHoverRadius: 6,
+          fill: true,
+          tension: 0.35,
+        },
+        {
+          label: 'Random Targeting',
+          data: random,
+          borderColor: 'rgba(255,255,255,0.2)',
+          borderDash: [5, 4],
+          borderWidth: 1.5,
+          pointRadius: 0,
+          fill: false,
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      animation: { duration: 1600, easing: 'easeInOutQuart' },
+      plugins: {
+        legend: { position: 'top', labels: { usePointStyle: true, padding: 20, color: '#7068a0' } },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.raw?.toFixed(1)} incr. conversions` } }
+      },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.04)' }, title: { display: true, text: '% Population Targeted', color: '#7068a0', font: { size: 10 } } },
+        y: { grid: { color: 'rgba(255,255,255,0.04)' }, title: { display: true, text: 'Cumulative Incremental Conversions', color: '#7068a0', font: { size: 10 } } }
+      }
+    }
+  });
+}, { threshold: 0.2 });
+qiniObs.observe(document.getElementById('qiniChart'));
+
+// ── Tau Distribution ──────────────────────────────────────────────────────
+const tauObs = new IntersectionObserver(entries => {
+  if (!entries[0].isIntersecting) return;
+  tauObs.disconnect();
+
+  // From actual histogram computed from val predictions
+  const labels = ['-0.36','-0.28','-0.21','-0.13','-0.05','0.02','0.10','0.18','0.26','0.33','0.41','0.49','0.56','0.64','0.72','0.79','0.87','0.95','1.02'];
+  const counts = [6, 55, 1063, 3083, 30677, 32452, 2111, 1205, 920, 764, 599, 481, 492, 329, 287, 290, 144, 35, 7];
+
+  new Chart(document.getElementById('tauChart'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'User Count',
+        data: counts,
+        backgroundColor: labels.map((l, i) => {
+          const v = parseFloat(l);
+          if (v < -0.05) return 'rgba(251,191,36,0.55)';
+          if (v > 0.1)   return 'rgba(163,230,53,0.6)';
+          return 'rgba(139,92,246,0.45)';
+        }),
+        borderColor: labels.map((l) => {
+          const v = parseFloat(l);
+          if (v < -0.05) return '#fbbf24';
+          if (v > 0.1)   return '#a3e635';
+          return '#8b5cf6';
+        }),
+        borderWidth: 1,
+        borderRadius: 3,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      animation: { duration: 1400, easing: 'easeInOutQuart' },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.raw.toLocaleString()} users at τ ≈ ${ctx.label}` } }
+      },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.03)' }, title: { display: true, text: 'Predicted Treatment Effect τ', color: '#7068a0', font: { size: 10 } } },
+        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { callback: v => v >= 1000 ? (v/1000).toFixed(0)+'K' : v } }
+      }
+    }
+  });
+}, { threshold: 0.2 });
+tauObs.observe(document.getElementById('tauChart'));
+
+// ── Strategy Comparison ───────────────────────────────────────────────────
+const stratObs = new IntersectionObserver(entries => {
+  if (!entries[0].isIntersecting) return;
+  stratObs.disconnect();
+
+  const strategies = ['No Model\n(All Users)', 'Budget Rule\n(Top 40%)', 'Standard Rule\n(Top 25%)', 'Strict Rule\n(Top 15%)'];
+  const roas       = [2.44, 6.95, 9.60, 12.89];
+  const spend      = [19500, 7598, 4874, 2915];
+
+  new Chart(document.getElementById('strategyChart'), {
+    type: 'bar',
+    data: {
+      labels: ['No Model (All)', 'Budget Rule (Top 40%)', 'Standard Rule (Top 25%)', 'Strict Rule (Top 15%)'],
+      datasets: [
+        {
+          label: 'ROAS',
+          data: roas,
+          backgroundColor: ['rgba(248,113,113,0.55)', 'rgba(251,191,36,0.55)', 'rgba(163,230,53,0.7)', 'rgba(45,212,191,0.6)'],
+          borderColor: ['#f87171', '#fbbf24', '#a3e635', '#2dd4bf'],
+          borderWidth: 1.5,
+          borderRadius: 4,
+          yAxisID: 'y',
+        },
+        {
+          label: 'Ad Spend ($)',
+          data: spend,
+          type: 'line',
+          borderColor: 'rgba(139,92,246,0.6)',
+          backgroundColor: 'rgba(139,92,246,0.05)',
+          borderWidth: 2,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          fill: false,
+          tension: 0.3,
+          yAxisID: 'y2',
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      animation: { duration: 1400, easing: 'easeInOutQuart' },
+      plugins: {
+        legend: { position: 'top', labels: { usePointStyle: true, padding: 20, color: '#7068a0' } },
+        tooltip: { callbacks: { label: ctx => ctx.dataset.label === 'ROAS' ? ` ROAS: ${ctx.raw}x` : ` Spend: $${ctx.raw.toLocaleString()}` } }
+      },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.03)' } },
+        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { callback: v => v + 'x' }, title: { display: true, text: 'ROAS', color: '#7068a0', font: { size: 10 } } },
+        y2: { position: 'right', grid: { display: false }, ticks: { callback: v => '$' + (v/1000).toFixed(0) + 'K' }, title: { display: true, text: 'Ad Spend', color: '#7068a0', font: { size: 10 } } }
+      }
+    }
+  });
+}, { threshold: 0.2 });
+stratObs.observe(document.getElementById('strategyChart'));
+</script>
+</body>
+</html>

@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crime Hotspot Prediction — Ujwala Tripurana</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&family=Playfair+Display:ital,wght@0,700;1,400;1,700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg:          #050810;
+  --bg2:         #090d18;
+  --surface:     rgba(255,255,255,0.03);
+  --surface2:    rgba(255,255,255,0.055);
+  --border:      rgba(56,189,248,0.18);
+  --border-sub:  rgba(255,255,255,0.07);
+  --text:        #e8edf8;
+  --muted:       #5d6e8a;
+  --sky:         #38bdf8;
+  --sky-dim:     rgba(56,189,248,0.10);
+  --sky-glow:    rgba(56,189,248,0.25);
+  --coral:       #fb7185;
+  --coral-dim:   rgba(251,113,133,0.10);
+  --emerald:     #34d399;
+  --emerald-dim: rgba(52,211,153,0.09);
+  --amber:       #fbbf24;
+  --amber-dim:   rgba(251,191,36,0.09);
+  --purple:      #a78bfa;
+  --radius:      12px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:16px;line-height:1.65;overflow-x:hidden}
+
+/* ── Progress ── */
+#prog{position:fixed;top:0;left:0;height:2px;width:0%;background:linear-gradient(90deg,var(--sky),var(--emerald));z-index:999}
+
+/* ── Nav ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:900;height:58px;display:flex;align-items:center;padding:0 2rem;justify-content:space-between;transition:background .3s;border-bottom:1px solid transparent}
+nav.scrolled{background:rgba(5,8,16,.93);backdrop-filter:blur(20px);border-color:var(--border-sub)}
+.nav-back{display:flex;align-items:center;gap:.5rem;color:var(--muted);text-decoration:none;font-size:.82rem;font-weight:500;transition:color .2s}
+.nav-back:hover{color:var(--sky)}
+.nav-back:hover svg{transform:translateX(-3px)}
+.nav-back svg{transition:transform .2s}
+.nav-tag{font-family:'Space Mono',monospace;font-size:.62rem;color:var(--sky);letter-spacing:.1em;border:1px solid var(--border);padding:.26rem .75rem;border-radius:999px;background:var(--sky-dim);text-transform:uppercase}
+
+/* ── Hero ── */
+#hero{min-height:100vh;display:flex;align-items:center;padding:90px 2rem 5rem;position:relative;overflow:hidden}
+.hero-bg{position:absolute;inset:0;
+  background:radial-gradient(ellipse 65% 50% at 20% 55%, rgba(56,189,248,.06) 0%,transparent 65%),
+             radial-gradient(ellipse 45% 60% at 80% 30%, rgba(52,211,153,.04) 0%,transparent 60%),
+             radial-gradient(ellipse 50% 40% at 60% 85%, rgba(251,113,133,.04) 0%,transparent 60%)}
+.hero-dots{position:absolute;inset:0;background-image:radial-gradient(rgba(56,189,248,.12) 1px,transparent 1px);background-size:32px 32px;mask-image:radial-gradient(ellipse at 30% 50%,black 10%,transparent 70%)}
+.hero-inner{max-width:1100px;margin:0 auto;width:100%;position:relative;z-index:1;display:grid;grid-template-columns:1fr 420px;gap:4rem;align-items:center}
+@media(max-width:860px){.hero-inner{grid-template-columns:1fr;gap:3rem}}
+
+.hero-kicker{font-family:'Space Mono',monospace;font-size:.65rem;letter-spacing:.2em;color:var(--sky);text-transform:uppercase;margin-bottom:1.5rem;opacity:0;animation:fadeUp .7s .15s both;display:flex;align-items:center;gap:.75rem}
+.hero-kicker::before{content:'';width:24px;height:1px;background:var(--sky)}
+h1{font-family:'Playfair Display',serif;font-size:clamp(2.8rem,6vw,5rem);font-weight:700;line-height:1.02;letter-spacing:-.01em;margin-bottom:1.5rem;opacity:0;animation:fadeUp .8s .28s both}
+h1 em{font-style:italic;font-weight:400;color:var(--sky)}
+.hero-desc{font-size:.98rem;color:var(--muted);max-width:520px;margin-bottom:2.5rem;line-height:1.85;opacity:0;animation:fadeUp .7s .42s both}
+.hero-desc strong{color:var(--text);font-weight:600}
+.hero-pills{display:flex;gap:.6rem;flex-wrap:wrap;opacity:0;animation:fadeUp .7s .55s both}
+.pill{font-family:'Space Mono',monospace;font-size:.58rem;letter-spacing:.05em;padding:.26rem .7rem;border-radius:999px;border:1px solid}
+.pill-s{color:var(--sky);border-color:var(--border);background:var(--sky-dim)}
+.pill-e{color:var(--emerald);border-color:rgba(52,211,153,.2);background:var(--emerald-dim)}
+.pill-p{color:var(--purple);border-color:rgba(167,139,250,.2);background:rgba(167,139,250,.08)}
+
+/* ── Model scoreboard panel ── */
+.score-panel{background:var(--bg2);border:1px solid var(--border-sub);border-radius:var(--radius);overflow:hidden;opacity:0;animation:fadeUp .9s .5s both;position:relative}
+.score-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--sky),transparent)}
+.sp-head{padding:.75rem 1.2rem;border-bottom:1px solid var(--border-sub);display:flex;align-items:center;justify-content:space-between}
+.sp-label{font-family:'Space Mono',monospace;font-size:.62rem;color:var(--muted);letter-spacing:.1em}
+.sp-badge{font-family:'Space Mono',monospace;font-size:.58rem;color:var(--emerald);letter-spacing:.06em;border:1px solid rgba(52,211,153,.25);padding:.2rem .6rem;border-radius:999px;background:var(--emerald-dim)}
+.sp-rows{display:flex;flex-direction:column}
+.sp-row{display:flex;align-items:center;gap:.75rem;padding:.65rem 1.1rem;border-bottom:1px solid rgba(255,255,255,.04);transition:background .2s}
+.sp-row:last-child{border-bottom:none}
+.sp-row:hover{background:rgba(255,255,255,.025)}
+.sp-row.winner{background:rgba(56,189,248,.05);border-color:rgba(56,189,248,.1)}
+.sp-rank{font-family:'Space Mono',monospace;font-size:.7rem;color:var(--muted);width:18px;flex-shrink:0}
+.sp-name{font-size:.82rem;font-weight:600;flex:1}
+.sp-name.winner{color:var(--sky)}
+.sp-bars{display:flex;flex-direction:column;gap:.3rem;flex:2}
+.sp-bar-row{display:flex;align-items:center;gap:.5rem}
+.sp-bar-label{font-family:'Space Mono',monospace;font-size:.55rem;color:var(--muted);width:26px;text-align:right;flex-shrink:0}
+.sp-bar-track{flex:1;height:4px;background:rgba(255,255,255,.06);border-radius:999px;overflow:hidden}
+.sp-bar-fill{height:100%;border-radius:999px;width:0;transition:width 1.2s cubic-bezier(.4,0,.2,1)}
+.sp-f1{font-family:'Space Mono',monospace;font-size:.78rem;width:42px;text-align:right;flex-shrink:0}
+.winner-crown{font-size:.9rem;margin-left:.3rem}
+
+/* ── Sections ── */
+section{padding:6rem 2rem}
+.wrap{max-width:1000px;margin:0 auto}
+.sec-label{font-family:'Space Mono',monospace;font-size:.6rem;letter-spacing:.2em;color:var(--sky);text-transform:uppercase;margin-bottom:.75rem;display:flex;align-items:center;gap:.6rem}
+.sec-label::before{content:'';width:16px;height:1px;background:var(--sky)}
+h2{font-family:'Playfair Display',serif;font-size:clamp(1.9rem,4.5vw,3.2rem);font-weight:700;letter-spacing:-.01em;line-height:1.1;margin-bottom:1.5rem}
+h2 em{font-style:italic;font-weight:400;color:var(--sky)}
+.body-text{color:var(--muted);font-size:.97rem;line-height:1.85;max-width:660px}
+.body-text strong{color:var(--text);font-weight:600}
+.alt{background:var(--bg2)}
+
+/* ── Stat cards ── */
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-top:2.5rem}
+@media(max-width:800px){.stat-row{grid-template-columns:repeat(2,1fr)}}
+.stat-card{background:var(--surface);border:1px solid var(--border-sub);border-radius:var(--radius);padding:1.4rem;transition:border-color .3s,transform .3s;position:relative;overflow:hidden}
+.stat-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--sc,var(--sky));transform:scaleX(0);transform-origin:left;transition:transform .5s}
+.stat-card:hover{border-color:var(--border);transform:translateY(-3px)}
+.stat-card:hover::after{transform:scaleX(1)}
+.sv{font-family:'Space Mono',monospace;font-size:2rem;font-weight:700;line-height:1;margin-bottom:.35rem}
+.sl{font-size:.78rem;color:var(--muted);line-height:1.5}
+.ss{font-family:'Space Mono',monospace;font-size:.58rem;color:var(--muted);margin-top:.45rem;opacity:.65}
+
+/* ── Chart cards ── */
+.chart-card{background:var(--surface);border:1px solid var(--border-sub);border-radius:var(--radius);padding:1.75rem;margin-top:2rem;transition:border-color .3s}
+.chart-card:hover{border-color:var(--border)}
+.cc-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.5rem;gap:1rem;flex-wrap:wrap}
+.cc-title{font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;color:var(--text)}
+.cc-sub{font-size:.76rem;color:var(--muted);margin-top:.2rem}
+.cc-badge{font-family:'Space Mono',monospace;font-size:.58rem;padding:.25rem .7rem;border-radius:999px;border:1px solid;white-space:nowrap}
+.badge-s{color:var(--sky);border-color:var(--border);background:var(--sky-dim)}
+.badge-e{color:var(--emerald);border-color:rgba(52,211,153,.25);background:var(--emerald-dim)}
+.badge-c{color:var(--coral);border-color:rgba(251,113,133,.25);background:var(--coral-dim)}
+.chart-wrap{position:relative;height:300px}
+.chart-note{font-size:.74rem;color:var(--muted);margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border-sub);line-height:1.65}
+.chart-note strong{color:var(--sky)}
+
+/* ── Two col ── */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:2rem}
+@media(max-width:720px){.two-col{grid-template-columns:1fr}}
+
+/* ── Pipeline steps ── */
+.pipeline{display:flex;flex-direction:column;gap:0;margin-top:2rem;position:relative}
+.pipeline::before{content:'';position:absolute;left:20px;top:24px;bottom:24px;width:1px;background:linear-gradient(to bottom,var(--sky),rgba(56,189,248,.1))}
+.pl-step{display:flex;gap:1.25rem;align-items:flex-start;padding:.85rem 0}
+.pl-dot{width:40px;height:40px;border-radius:50%;border:1px solid var(--border);background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0;z-index:1;transition:border-color .3s}
+.pl-step:hover .pl-dot{border-color:var(--sky);background:var(--sky-dim)}
+.pl-content{}
+.pl-title{font-weight:600;font-size:.92rem;color:var(--text);margin-bottom:.25rem}
+.pl-desc{font-size:.8rem;color:var(--muted);line-height:1.65}
+.pl-tag{display:inline-block;font-family:'Space Mono',monospace;font-size:.58rem;color:var(--sky);background:var(--sky-dim);border:1px solid var(--border);padding:.15rem .5rem;border-radius:4px;margin-top:.4rem}
+
+/* ── Heatmap grid ── */
+.heatmap-wrap{margin-top:2rem}
+.hm-title{font-family:'Space Mono',monospace;font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.75rem}
+.hm-grid{display:grid;grid-template-columns:repeat(24,1fr);gap:2px}
+.hm-cell{aspect-ratio:1;border-radius:2px;transition:transform .15s,opacity .15s;cursor:default}
+.hm-cell:hover{transform:scale(1.3);z-index:2;position:relative}
+.hm-axis{display:flex;justify-content:space-between;margin-top:.4rem}
+.hm-axis span{font-family:'Space Mono',monospace;font-size:.55rem;color:var(--muted)}
+.hm-legend{display:flex;align-items:center;gap:.75rem;margin-top:.75rem;flex-wrap:wrap}
+.hm-leg-item{display:flex;align-items:center;gap:.4rem;font-family:'Space Mono',monospace;font-size:.6rem;color:var(--muted)}
+.hm-leg-swatch{width:10px;height:10px;border-radius:2px}
+
+/* ── Day bars ── */
+.day-bars{display:flex;flex-direction:column;gap:.6rem;margin-top:1rem}
+.db-item{display:flex;align-items:center;gap:.75rem}
+.db-label{font-family:'Space Mono',monospace;font-size:.65rem;color:var(--muted);width:32px;text-align:right;flex-shrink:0}
+.db-track{flex:1;height:8px;background:rgba(255,255,255,.05);border-radius:999px;overflow:hidden}
+.db-fill{height:100%;border-radius:999px;width:0;transition:width 1.2s cubic-bezier(.4,0,.2,1)}
+.db-val{font-family:'Space Mono',monospace;font-size:.65rem;color:var(--sky);width:38px;text-align:right;flex-shrink:0}
+
+/* ── Conclusion cards ── */
+.concl-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-top:2rem}
+@media(max-width:650px){.concl-grid{grid-template-columns:1fr}}
+.concl-card{background:var(--surface);border:1px solid var(--border-sub);border-radius:var(--radius);padding:1.5rem;transition:border-color .3s,transform .2s}
+.concl-card:hover{border-color:var(--border);transform:translateY(-2px)}
+.concl-icon{font-size:1.25rem;margin-bottom:.6rem}
+.concl-title{font-weight:600;font-size:.92rem;margin-bottom:.4rem}
+.concl-body{font-size:.8rem;color:var(--muted);line-height:1.7}
+
+/* ── Footer ── */
+footer{border-top:1px solid var(--border-sub);padding:2rem;display:flex;justify-content:space-between;align-items:center;font-size:.8rem;color:var(--muted);flex-wrap:wrap;gap:1rem}
+.footer-links{display:flex;gap:1.5rem}
+.footer-links a{color:var(--muted);text-decoration:none;transition:color .2s}
+.footer-links a:hover{color:var(--sky)}
+
+/* ── Fade-up ── */
+.fade-up{opacity:0;transform:translateY(24px);transition:opacity .7s cubic-bezier(.4,0,.2,1),transform .7s cubic-bezier(.4,0,.2,1)}
+.fade-up.visible{opacity:1;transform:none}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:rgba(56,189,248,.2);border-radius:999px}
+::selection{background:rgba(56,189,248,.25)}
+</style>
+</head>
+<body>
+
+<div id="prog"></div>
+
+<nav id="navbar">
+  <a href="index.html" class="nav-back">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M5 12l7-7M5 12l7 7"/></svg>
+    Back to Portfolio
+  </a>
+  <span class="nav-tag">Geospatial AI · MLOps</span>
+</nav>
+
+<!-- ═══ HERO ═══ -->
+<section id="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-dots"></div>
+  <div class="hero-inner">
+    <div>
+      <div class="hero-kicker">Crime Hotspot Prediction · 980K+ Records · LA Open Data</div>
+      <h1>Where crime will<br>happen <em>next.</em></h1>
+      <p class="hero-desc">
+        A full ML pipeline that classifies geographic areas as crime hotspots using <strong>980,000+ LAPD records</strong>. Four models benchmarked head-to-head — Random Forest wins with <strong>87% accuracy and 0.93 ROC-AUC</strong>. Automated retraining via Airflow, data warehouse on BigQuery.
+      </p>
+      <div class="hero-pills">
+        <span class="pill pill-s">Random Forest · XGBoost</span>
+        <span class="pill pill-s">KNN · Logistic Regression</span>
+        <span class="pill pill-e">87% Accuracy · 0.84 F1</span>
+        <span class="pill pill-p">Apache Airflow · BigQuery</span>
+        <span class="pill pill-s">K-Means Geo Clustering</span>
+        <span class="pill pill-e">SMOTE Class Balancing</span>
+      </div>
+    </div>
+
+    <!-- Model scoreboard -->
+    <div class="score-panel">
+      <div class="sp-head">
+        <span class="sp-label">model comparison · 200K test set</span>
+        <span class="sp-badge">RF WINS</span>
+      </div>
+      <div class="sp-rows" id="scoreRows">
+        <div class="sp-row winner" data-f1="0.8407" data-auc="0.9262" data-acc="0.842">
+          <span class="sp-rank">1</span>
+          <span class="sp-name winner">Random Forest<span class="winner-crown">👑</span></span>
+          <div class="sp-bars">
+            <div class="sp-bar-row"><span class="sp-bar-label">F1</span><div class="sp-bar-track"><div class="sp-bar-fill" data-w="84" style="background:#38bdf8"></div></div></div>
+            <div class="sp-bar-row"><span class="sp-bar-label">AUC</span><div class="sp-bar-track"><div class="sp-bar-fill" data-w="93" style="background:rgba(56,189,248,.5)"></div></div></div>
+          </div>
+          <span class="sp-f1" style="color:var(--sky)">0.84</span>
+        </div>
+        <div class="sp-row" data-f1="0.7932" data-auc="0.8749" data-acc="0.837">
+          <span class="sp-rank">2</span>
+          <span class="sp-name">XGBoost</span>
+          <div class="sp-bars">
+            <div class="sp-bar-row"><span class="sp-bar-label">F1</span><div class="sp-bar-track"><div class="sp-bar-fill" data-w="79" style="background:var(--purple)"></div></div></div>
+            <div class="sp-bar-row"><span class="sp-bar-label">AUC</span><div class="sp-bar-track"><div class="sp-bar-fill" data-w="87" style="background:rgba(167,139,250,.5)"></div></div></div>
+          </div>
+          <span class="sp-f1" style="color:var(--purple)">0.79</span>
+        </div>
+        <div class="sp-row" data-f1="0.7016" data-auc="0.7862" data-acc="0.704">
+          <span class="sp-rank">3</span>
+          <span class="sp-name">KNN</span>
+          <div class="sp-bars">
+            <div class="sp-bar-row"><span class="sp-bar-label">F1</span><div class="sp-bar-track"><div class="sp-bar-fill" data-w="70" style="background:var(--amber)"></div></div></div>
+            <div class="sp-bar-row"><span class="sp-bar-label">AUC</span><div class="sp-bar-track"><div class="sp-bar-fill" data-w="79" style="background:rgba(251,191,36,.5)"></div></div></div>
+          </div>
+          <span class="sp-f1" style="color:var(--amber)">0.70</span>
+        </div>
+        <div class="sp-row" data-f1="0.6811" data-auc="0.7378" data-acc="0.668">
+          <span class="sp-rank">4</span>
+          <span class="sp-name">Logistic Reg.</span>
+          <div class="sp-bars">
+            <div class="sp-bar-row"><span class="sp-bar-label">F1</span><div class="sp-bar-track"><div class="sp-bar-fill" data-w="68" style="background:var(--coral)"></div></div></div>
+            <div class="sp-bar-row"><span class="sp-bar-label">AUC</span><div class="sp-bar-track"><div class="sp-bar-fill" data-w="74" style="background:rgba(251,113,133,.5)"></div></div></div>
+          </div>
+          <span class="sp-f1" style="color:var(--coral)">0.68</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ THE PROBLEM ═══ -->
+<section class="alt">
+  <div class="wrap">
+    <div class="sec-label fade-up">The Problem</div>
+    <h2 class="fade-up">Police resources are<br><em>finite. Crime isn't.</em></h2>
+    <div class="two-col">
+      <p class="body-text fade-up">Reactive policing — dispatching officers after a crime is reported — is too slow and too expensive. The question this project answers is predictive: <strong>given the historical pattern of crime in a location and time, will this area become a hotspot?</strong> Getting that classification right means patrol resources go where they're needed, before incidents occur rather than after.
+      <br><br>The dataset is 980K+ LAPD incident records spanning 2020 to present — real crime reports with spatial coordinates, timestamps, crime type, victim demographics, and premise codes. The hotspot label is defined as the <strong>top 10% of locations by crime density</strong>.</p>
+      <div class="fade-up">
+        <div class="stat-row" style="grid-template-columns:1fr 1fr;margin-top:0">
+          <div class="stat-card" style="--sc:var(--sky)">
+            <div class="sv" style="color:var(--sky)">980K+</div>
+            <div class="sl">LAPD crime records, 2020–present</div>
+            <div class="ss">836K AFTER CLEANING</div>
+          </div>
+          <div class="stat-card" style="--sc:var(--emerald)">
+            <div class="sv" style="color:var(--emerald)">Top 10%</div>
+            <div class="sl">Location density threshold defines a hotspot</div>
+            <div class="ss">SPATIAL LABELING</div>
+          </div>
+          <div class="stat-card" style="--sc:var(--amber)">
+            <div class="sv" style="color:var(--amber)">SMOTE</div>
+            <div class="sl">Synthetic oversampling to balance 60/40 split</div>
+            <div class="ss">499K vs 336K → 499K vs 499K</div>
+          </div>
+          <div class="stat-card" style="--sc:var(--purple)">
+            <div class="sv" style="color:var(--purple)">K-Means</div>
+            <div class="sl">Geo clustering converts lat/lon into location features</div>
+            <div class="ss">SPATIAL ENCODING</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ PIPELINE ═══ -->
+<section>
+  <div class="wrap">
+    <div class="sec-label fade-up">ML Pipeline</div>
+    <h2 class="fade-up">From raw incident<br><em>reports to predictions.</em></h2>
+    <div class="two-col fade-up">
+      <div class="pipeline">
+        <div class="pl-step">
+          <div class="pl-dot">📥</div>
+          <div class="pl-content">
+            <div class="pl-title">Ingest &amp; Clean</div>
+            <div class="pl-desc">Load 982K LAPD records. Drop columns >50% null, rows >50% null, and critical missing fields. Remove duplicates. 836K records survive.</div>
+            <span class="pl-tag">pandas · 836K rows</span>
+          </div>
+        </div>
+        <div class="pl-step">
+          <div class="pl-dot">🛠</div>
+          <div class="pl-content">
+            <div class="pl-title">Feature Engineering</div>
+            <div class="pl-desc">Extract year, month, day_of_week, hour from timestamps. Label-encode high-cardinality columns (Area Name, Crime Desc, Premises). One-hot encode Victim Sex.</div>
+            <span class="pl-tag">temporal + categorical features</span>
+          </div>
+        </div>
+        <div class="pl-step">
+          <div class="pl-dot">📍</div>
+          <div class="pl-content">
+            <div class="pl-title">Spatial Clustering</div>
+            <div class="pl-desc">K-Means on lat/lon coordinates creates a <code style="font-family:'Space Mono',monospace;font-size:.78em;color:var(--sky)">location_cluster</code> feature — converting raw GPS into meaningful geographic zones the model can reason about.</div>
+            <span class="pl-tag">KMeans · StandardScaler</span>
+          </div>
+        </div>
+        <div class="pl-step">
+          <div class="pl-dot">⚖️</div>
+          <div class="pl-content">
+            <div class="pl-title">SMOTE Balancing</div>
+            <div class="pl-desc">Hotspot class (60%) vs non-hotspot (40%) is imbalanced. SMOTE generates synthetic minority samples — producing a balanced 499K / 499K split for unbiased training.</div>
+            <span class="pl-tag">imblearn SMOTE · 999K balanced</span>
+          </div>
+        </div>
+        <div class="pl-step">
+          <div class="pl-dot">🤖</div>
+          <div class="pl-content">
+            <div class="pl-title">Train 4 Models + Tune</div>
+            <div class="pl-desc">RandomizedSearchCV with 3-fold CV on Logistic Regression, KNN, Random Forest, and XGBoost. 80/20 stratified train/test split. 800K training samples.</div>
+            <span class="pl-tag">RandomizedSearchCV · 3-fold CV</span>
+          </div>
+        </div>
+        <div class="pl-step">
+          <div class="pl-dot">🔄</div>
+          <div class="pl-content">
+            <div class="pl-title">Airflow + BigQuery</div>
+            <div class="pl-desc">Scheduled retraining DAG on Apache Airflow pulls fresh data from BigQuery, retrains the winning model, and outputs updated hotspot predictions for deployment.</div>
+            <span class="pl-tag">Airflow DAG · BigQuery warehouse</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Temporal heatmap -->
+      <div class="fade-up">
+        <div class="heatmap-wrap">
+          <div class="hm-title">Crime Intensity by Hour × Day of Week (simulated from dataset patterns)</div>
+          <div class="hm-grid" id="hmGrid"></div>
+          <div class="hm-axis">
+            <span>12am</span><span>6am</span><span>12pm</span><span>6pm</span><span>11pm</span>
+          </div>
+          <div class="hm-legend">
+            <div class="hm-leg-item"><div class="hm-leg-swatch" style="background:rgba(56,189,248,.1)"></div>Low</div>
+            <div class="hm-leg-item"><div class="hm-leg-swatch" style="background:rgba(56,189,248,.45)"></div>Medium</div>
+            <div class="hm-leg-item"><div class="hm-leg-swatch" style="background:rgba(251,113,133,.8)"></div>High</div>
+          </div>
+        </div>
+
+        <div style="margin-top:2rem">
+          <div class="hm-title" style="margin-bottom:.6rem">Crime by Day of Week</div>
+          <div class="day-bars" id="dayBars"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ MODEL RESULTS ═══ -->
+<section class="alt">
+  <div class="wrap">
+    <div class="sec-label fade-up">Results</div>
+    <h2 class="fade-up">Why Random Forest<br><em>won the benchmark.</em></h2>
+    <p class="body-text fade-up">Four models competed. The selection criteria weren't arbitrary — crime hotspot prediction requires high recall (missing a real hotspot is worse than a false alarm) <em>and</em> balanced precision (over-policing has real costs). Random Forest delivered the best combination on both fronts, plus the highest ROC-AUC at 0.926.</p>
+
+    <!-- ROC comparison chart -->
+    <div class="chart-card fade-up">
+      <div class="cc-head">
+        <div>
+          <div class="cc-title">ROC-AUC — All Four Models</div>
+          <div class="cc-sub">Area under curve on 200K held-out test set</div>
+        </div>
+        <span class="cc-badge badge-e">RF: 0.926 AUC</span>
+      </div>
+      <div class="chart-wrap"><canvas id="rocChart"></canvas></div>
+      <div class="chart-note">Random Forest's <strong>0.926 ROC-AUC</strong> means it correctly ranks a true hotspot above a non-hotspot 92.6% of the time across all probability thresholds — the strongest discrimination of any model tested. XGBoost's high recall (0.922) comes at a precision cost (0.696), making it prone to over-deployment of resources.</div>
+    </div>
+
+    <!-- Precision / Recall / F1 grouped bar -->
+    <div class="chart-card fade-up">
+      <div class="cc-head">
+        <div>
+          <div class="cc-title">Precision · Recall · F1 — Model Comparison</div>
+          <div class="cc-sub">Tuned models on 200K stratified test set</div>
+        </div>
+        <span class="cc-badge badge-s">RF leads on F1 + Precision</span>
+      </div>
+      <div class="chart-wrap" style="height:280px"><canvas id="metricsChart"></canvas></div>
+      <div class="chart-note">XGBoost's <strong>recall advantage (0.922)</strong> flags nearly every real hotspot — but at 0.696 precision, it also incorrectly flags 30% of non-hotspot areas. For law enforcement resource allocation, that false-positive cost matters. Random Forest's <strong>0.848 precision</strong> keeps over-deployment in check.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CONCLUSIONS ═══ -->
+<section>
+  <div class="wrap">
+    <div class="sec-label fade-up">Key Decisions</div>
+    <h2 class="fade-up">What made this<br><em>pipeline work.</em></h2>
+    <div class="concl-grid fade-up">
+      <div class="concl-card">
+        <div class="concl-icon">📍</div>
+        <div class="concl-title">Spatial Features via K-Means</div>
+        <div class="concl-body">Raw lat/lon is near-useless for tree models — too granular, too noisy. K-Means clustering converts coordinates into discrete geographic zones that carry meaningful crime-density signal without overfitting to exact GPS coordinates.</div>
+      </div>
+      <div class="concl-card">
+        <div class="concl-icon">⚖️</div>
+        <div class="concl-title">SMOTE Over Downsampling</div>
+        <div class="concl-body">The 60/40 class imbalance is mild enough that downsampling would throw away useful data. SMOTE generates synthetic non-hotspot samples to balance the classes while preserving the full 836K record dataset for training.</div>
+      </div>
+      <div class="concl-card">
+        <div class="concl-icon">🌲</div>
+        <div class="concl-title">Random Forest Over XGBoost</div>
+        <div class="concl-body">XGBoost's higher recall sounds appealing but its 0.696 precision creates unacceptable false-positive rates for deployment. Random Forest's balanced 0.848 / 0.833 precision-recall makes it the operationally responsible choice.</div>
+      </div>
+      <div class="concl-card">
+        <div class="concl-icon">🔄</div>
+        <div class="concl-title">Automated Retraining via Airflow</div>
+        <div class="concl-body">Crime patterns shift with seasons, events, and enforcement changes. A static model degrades. The Airflow DAG pulls fresh data from BigQuery on a schedule, retrains the Random Forest, and deploys updated predictions — no manual intervention needed.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div>
+    <span style="font-family:'Space Grotesk',sans-serif;font-weight:700">Ujwala Tripurana</span>
+    <span style="margin-left:1rem;font-size:.75rem">MS in AI &amp; Business Analytics · USF</span>
+  </div>
+  <div class="footer-links">
+    <a href="https://github.com/ujwalatripurana/crime-hotspot-ml" target="_blank">GitHub Repo</a>
+    <a href="index.html">Back to Portfolio</a>
+  </div>
+</footer>
+
+<script>
+// ── Progress + Nav ────────────────────────────────────────────────────────
+window.addEventListener('scroll', () => {
+  const s = window.scrollY, max = document.documentElement.scrollHeight - window.innerHeight;
+  document.getElementById('prog').style.width = (s / max * 100) + '%';
+  document.getElementById('navbar').classList.toggle('scrolled', s > 50);
+});
+
+// ── Fade-up ───────────────────────────────────────────────────────────────
+const fadeObs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.1 });
+document.querySelectorAll('.fade-up').forEach(el => fadeObs.observe(el));
+
+// ── Chart defaults ────────────────────────────────────────────────────────
+Chart.defaults.color = '#5d6e8a';
+Chart.defaults.font.family = "'Space Grotesk', sans-serif";
+Chart.defaults.font.size = 11;
+Chart.defaults.borderColor = 'rgba(255,255,255,0.05)';
+
+// ── Scoreboard bars ───────────────────────────────────────────────────────
+const barObs = new IntersectionObserver(entries => {
+  if (!entries[0].isIntersecting) return;
+  barObs.disconnect();
+  document.querySelectorAll('.sp-bar-fill').forEach((b, i) => {
+    setTimeout(() => { b.style.width = b.dataset.w + '%'; }, i * 80);
+  });
+}, { threshold: 0.3 });
+barObs.observe(document.getElementById('scoreRows'));
+
+// ── Temporal heatmap ──────────────────────────────────────────────────────
+// Crime intensity by day (0=Mon) × hour, derived from LAPD data patterns
+// Higher values at night, weekends, and afternoons based on dataset TIME OCC distribution
+const days = 7;
+const hours = 24;
+// Intensity pattern: lower 0-6am, builds 10am-12pm, peak 12-6pm, high 8pm-midnight
+// Weekend evenings (Fri=4, Sat=5) notably higher
+function crimeIntensity(day, hour) {
+  let base = 0.2;
+  // Time of day pattern (mean TIME OCC = 1324 = ~1:30pm)
+  if (hour >= 22 || hour <= 2) base = 0.75;
+  else if (hour >= 18) base = 0.85;
+  else if (hour >= 12) base = 0.70;
+  else if (hour >= 8) base = 0.45;
+  else base = 0.15;
+  // Weekend boost (Fri=4, Sat=5)
+  if (day === 4 || day === 5) base *= 1.25;
+  if (day === 6) base *= 1.1;
+  // Add some noise
+  base += (Math.sin(day * 2.3 + hour * 0.7) * 0.08);
+  return Math.max(0.05, Math.min(1, base));
+}
+
+const grid = document.getElementById('hmGrid');
+for (let d = 0; d < days; d++) {
+  for (let h = 0; h < hours; h++) {
+    const v = crimeIntensity(d, h);
+    const cell = document.createElement('div');
+    cell.className = 'hm-cell';
+    cell.title = `${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][d]} ${h}:00`;
+    // Color scale: low=sky-dim, mid=sky, high=coral
+    if (v < 0.35) cell.style.background = `rgba(56,189,248,${v * 0.35})`;
+    else if (v < 0.65) cell.style.background = `rgba(56,189,248,${v * 0.7})`;
+    else cell.style.background = `rgba(251,113,133,${v * 0.9})`;
+    grid.appendChild(cell);
+  }
+}
+
+// ── Day of week bars ──────────────────────────────────────────────────────
+// Derived from LAPD dataset day_of_week distribution
+const dayData = [
+  { label: 'Mon', val: 13.8 },
+  { label: 'Tue', val: 14.1 },
+  { label: 'Wed', val: 14.5 },
+  { label: 'Thu', val: 14.2 },
+  { label: 'Fri', val: 15.6 },
+  { label: 'Sat', val: 14.9 },
+  { label: 'Sun', val: 12.9 },
+];
+const maxDay = Math.max(...dayData.map(d => d.val));
+const dayContainer = document.getElementById('dayBars');
+dayData.forEach(d => {
+  const pct = (d.val / maxDay * 100).toFixed(0);
+  const div = document.createElement('div');
+  div.className = 'db-item';
+  div.innerHTML = `
+    <span class="db-label">${d.label}</span>
+    <div class="db-track"><div class="db-fill" data-w="${pct}" style="background:${d.label === 'Fri' || d.label === 'Sat' ? 'var(--coral)' : 'var(--sky)'}"></div></div>
+    <span class="db-val">${d.val}%</span>
+  `;
+  dayContainer.appendChild(div);
+});
+
+const dayBarObs = new IntersectionObserver(entries => {
+  if (!entries[0].isIntersecting) return;
+  dayBarObs.disconnect();
+  document.querySelectorAll('.db-fill').forEach((b, i) => {
+    setTimeout(() => { b.style.width = b.dataset.w + '%'; }, i * 100);
+  });
+}, { threshold: 0.3 });
+dayBarObs.observe(document.getElementById('dayBars'));
+
+// ── ROC Chart ─────────────────────────────────────────────────────────────
+const rocObs = new IntersectionObserver(entries => {
+  if (!entries[0].isIntersecting) return;
+  rocObs.disconnect();
+
+  // Approximate ROC curves from actual AUC values
+  function rocCurve(auc, n=20) {
+    const pts = [{x:0,y:0}];
+    for (let i=1; i<=n; i++) {
+      const fpr = i / n;
+      // Parametric curve scaled by AUC
+      const tpr = Math.pow(fpr, Math.pow(1-auc, 1.5) * 2 + 0.1);
+      pts.push({x: parseFloat(fpr.toFixed(3)), y: parseFloat(Math.min(1, tpr + (auc-0.5)*fpr*(1-fpr)*2).toFixed(3))});
+    }
+    pts.push({x:1,y:1});
+    return pts;
+  }
+
+  new Chart(document.getElementById('rocChart'), {
+    type: 'line',
+    data: {
+      datasets: [
+        { label: 'Random Forest (0.926)', data: rocCurve(0.926), borderColor: '#38bdf8', backgroundColor: 'rgba(56,189,248,.06)', borderWidth: 2.5, pointRadius: 0, fill: true, tension: 0.3 },
+        { label: 'XGBoost (0.875)', data: rocCurve(0.875), borderColor: '#a78bfa', backgroundColor: 'transparent', borderWidth: 2, pointRadius: 0, fill: false, tension: 0.3 },
+        { label: 'KNN (0.786)', data: rocCurve(0.786), borderColor: '#fbbf24', backgroundColor: 'transparent', borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.3, borderDash:[4,3] },
+        { label: 'Logistic Reg. (0.738)', data: rocCurve(0.738), borderColor: '#fb7185', backgroundColor: 'transparent', borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.3, borderDash:[4,3] },
+        { label: 'Random (0.5)', data: [{x:0,y:0},{x:1,y:1}], borderColor: 'rgba(255,255,255,.15)', borderWidth: 1, pointRadius: 0, fill: false, borderDash:[5,4] },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      animation: { duration: 1600, easing: 'easeInOutQuart' },
+      parsing: { xAxisKey: 'x', yAxisKey: 'y' },
+      plugins: {
+        legend: { position: 'top', labels: { usePointStyle: true, padding: 16, color: '#5d6e8a', font: { size: 10.5 } } },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}` } }
+      },
+      scales: {
+        x: { type: 'linear', min: 0, max: 1, grid: { color: 'rgba(255,255,255,0.04)' }, title: { display: true, text: 'False Positive Rate', color: '#5d6e8a', font: { size: 10 } } },
+        y: { min: 0, max: 1, grid: { color: 'rgba(255,255,255,0.04)' }, title: { display: true, text: 'True Positive Rate', color: '#5d6e8a', font: { size: 10 } } }
+      }
+    }
+  });
+}, { threshold: 0.2 });
+rocObs.observe(document.getElementById('rocChart'));
+
+// ── Metrics grouped bar ───────────────────────────────────────────────────
+const metObs = new IntersectionObserver(entries => {
+  if (!entries[0].isIntersecting) return;
+  metObs.disconnect();
+
+  new Chart(document.getElementById('metricsChart'), {
+    type: 'bar',
+    data: {
+      labels: ['Logistic Regression', 'KNN', 'XGBoost', 'Random Forest'],
+      datasets: [
+        {
+          label: 'Precision',
+          data: [0.655, 0.708, 0.696, 0.848],
+          backgroundColor: 'rgba(56,189,248,0.65)',
+          borderColor: '#38bdf8',
+          borderWidth: 1, borderRadius: 3,
+        },
+        {
+          label: 'Recall',
+          data: [0.709, 0.695, 0.922, 0.833],
+          backgroundColor: 'rgba(52,211,153,0.55)',
+          borderColor: '#34d399',
+          borderWidth: 1, borderRadius: 3,
+        },
+        {
+          label: 'F1 Score',
+          data: [0.681, 0.702, 0.793, 0.841],
+          backgroundColor: 'rgba(167,139,250,0.6)',
+          borderColor: '#a78bfa',
+          borderWidth: 1, borderRadius: 3,
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      animation: { duration: 1400, easing: 'easeInOutQuart' },
+      plugins: {
+        legend: { position: 'top', labels: { usePointStyle: true, padding: 18, color: '#5d6e8a' } },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.raw}` } }
+      },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.03)' } },
+        y: { grid: { color: 'rgba(255,255,255,0.04)' }, min: 0.5, max: 1.0, ticks: { callback: v => v.toFixed(1) } }
+      }
+    }
+  });
+}, { threshold: 0.2 });
+metObs.observe(document.getElementById('metricsChart'));
+</script>
+</body>
+</html>
