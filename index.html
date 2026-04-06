@@ -767,10 +767,10 @@ em { font-style: italic; }
   background: var(--surface);
   border: 1px solid var(--border-sub);
   border-radius: var(--radius);
-  padding: 1.75rem 1.75rem 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.9rem;
+  gap: 0;
   transition: border-color var(--transition), transform var(--transition),
               box-shadow var(--transition), background var(--transition);
   overflow: hidden;
@@ -781,7 +781,6 @@ em { font-style: italic; }
   box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
   background: var(--surface-h);
 }
-/* Featured card */
 .proj-featured {
   grid-column: span 2;
   background: linear-gradient(135deg,
@@ -792,6 +791,13 @@ em { font-style: italic; }
 .proj-featured:hover {
   border-color: rgba(0, 229, 195, 0.5);
   box-shadow: 0 16px 48px rgba(0, 229, 195, 0.12);
+}
+.proj-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 1.75rem;
+  flex: 1;
 }
 .proj-top {
   display: flex;
@@ -869,6 +875,14 @@ em { font-style: italic; }
   letter-spacing: 0.08em;
   line-height: 1.3;
 }
+.proj-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.75rem;
+  background: rgba(255,255,255,0.03);
+  border-top: 1px solid rgba(255,255,255,0.07);
+}
 .proj-link {
   display: inline-flex;
   align-items: center;
@@ -881,31 +895,18 @@ em { font-style: italic; }
   letter-spacing: 0.04em;
 }
 .proj-link:hover { gap: 0.65rem; opacity: 0.8; }
-.proj-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.75rem 1.75rem;
-  margin-top: auto;
-  background: rgba(255,255,255,0.03);
-  border-top: 1px solid rgba(255,255,255,0.07);
-}
-.proj-footer .proj-link {
-  font-size: 0.8rem;
-  margin-top: 0;
-}
-.proj-footer .proj-link-muted {
+.proj-link-muted {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
   font-size: 0.8rem;
+  font-weight: 500;
   color: var(--muted);
   text-decoration: none;
   transition: color var(--transition);
+  letter-spacing: 0.04em;
 }
-.proj-footer .proj-link-muted:hover {
-  color: var(--text);
-}
+.proj-link-muted:hover { color: var(--text); }
     
 /* ── Skills ──────────────────────────────────────────────────────────────── */
 .skills-grid {
@@ -1284,16 +1285,17 @@ footer {
 
   <!-- ==================== PROJECTS ==================== -->
   <section id="projects" class="section">
-    <div class="section-wrap">
-      <div class="section-label mono">PROJECTS</div>
-      <h2 class="section-title">Built to<br><em>Perform</em></h2>
+  <div class="section-wrap">
+    <div class="section-label mono">PROJECTS</div>
+    <h2 class="section-title">Built to<br><em>Perform</em></h2>
 
-      <div class="projects-grid">
+    <div class="projects-grid">
 
-        <article class="proj-card fade-up" style="position:relative;cursor:pointer" onclick="window.location='promo-abuse-detection.html'">
-        <div class="proj-top">
-        <span class="proj-domain-badge">Fraud Detection</span>
-         </div>
+      <article class="proj-card fade-up" style="position:relative;cursor:pointer" onclick="window.location='promo-abuse-detection.html'">
+        <div class="proj-body">
+          <div class="proj-top">
+            <span class="proj-domain-badge">Fraud Detection</span>
+          </div>
           <h3>Real-Time Promo &amp; Trial Abuse Detection</h3>
           <p class="proj-role mono">Streaming AI · Anomaly Detection · Fraud</p>
           <p class="proj-desc">Catches promo abuse in real time: trial hopping, payment reuse, and card fingerprint collisions. Cooldown checks run across device, email, and card signals with audit logs stored in PostgreSQL.</p>
@@ -1308,23 +1310,24 @@ footer {
             <div class="pmet"><span class="pmet-val mono counter-text" data-text="&lt;1s">—</span><span class="pmet-lbl">Event Latency</span></div>
             <div class="pmet"><span class="pmet-val mono counter-text" data-text="3">—</span><span class="pmet-lbl">Signal Vectors</span></div>
             <div class="pmet"><span class="pmet-val mono counter-text" data-text="✓ Audit">—</span><span class="pmet-lbl">Compliance</span></div>
-          <div class="proj-footer">
+          </div>
+        </div>
+        <div class="proj-footer">
           <a class="proj-link-muted" href="https://github.com/ujwalatripurana/promo-abuse-detection" target="_blank" onclick="event.stopPropagation()">
-          GitHub
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17L17 7M7 7h10v10"/></svg>
+            GitHub <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17L17 7M7 7h10v10"/></svg>
           </a>
           <a class="proj-link" href="promo-abuse-detection.html" onclick="event.stopPropagation()">
-          View Case Study
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17L17 7M7 7h10v10"/></svg>
+            View Case Study <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17L17 7M7 7h10v10"/></svg>
           </a>
-          </div>
-        </article>
+        </div>
+      </article>
 
-        <article class="proj-card fade-up" style="position:relative;cursor:pointer" onclick="window.location='housing-project.html'">
-  <div class="proj-top">
-    <span class="proj-domain-badge">Data Storytelling</span>
-  </div>
-  <h3>U.S. Housing Affordability: Then &amp; Now</h3>
+      <article class="proj-card fade-up" style="position:relative;cursor:pointer" onclick="window.location='housing-project.html'">
+        <div class="proj-body">
+          <div class="proj-top">
+            <span class="proj-domain-badge">Data Storytelling</span>
+          </div>
+          <h3>U.S. Housing Affordability: Then &amp; Now</h3>
           <p class="proj-role mono">Business Analytics · Visual Intelligence</p>
           <p class="proj-desc">Combined 9 public datasets to show how housing affordability shifted over 30 years across income groups and regions. Two Tableau dashboards with filters by state, year, and income tier.</p>
           <div class="proj-tags">
@@ -1337,20 +1340,20 @@ footer {
             <div class="pmet"><span class="pmet-val mono counter-num" data-count="9">0</span><span class="pmet-lbl">Datasets</span></div>
             <div class="pmet"><span class="pmet-val mono counter-num" data-count="11">0</span><span class="pmet-lbl">Visualizations</span></div>
             <div class="pmet"><span class="pmet-val mono counter-num" data-count="30">0</span><span class="pmet-lbl">Years Coverage</span></div>
-          <div class="proj-footer">
+          </div>
+        </div>
+        <div class="proj-footer">
           <a class="proj-link-muted" href="https://github.com/ujwalatripurana/us-housing-affordability" target="_blank" onclick="event.stopPropagation()">
-          GitHub
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17L17 7M7 7h10v10"/></svg>
+            GitHub <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17L17 7M7 7h10v10"/></svg>
           </a>
           <a class="proj-link" href="housing-project.html" onclick="event.stopPropagation()">
-          View Case Study
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17L17 7M7 7h10v10"/></svg>
+            View Case Study <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17L17 7M7 7h10v10"/></svg>
           </a>
-          </div>
-        </article>
+        </div>
+      </article>
 
-        <!-- Featured -->
-        <article class="proj-card fade-up" style="position:relative;cursor:pointer" onclick="window.location='causal-uplift.html'">
+      <article class="proj-card proj-featured fade-up" style="position:relative;cursor:pointer" onclick="window.location='causal-uplift.html'">
+        <div class="proj-body">
           <div class="proj-top">
             <span class="proj-domain-badge featured-badge">&#9733; Featured</span>
           </div>
@@ -1368,19 +1371,20 @@ footer {
             <div class="pmet"><span class="pmet-val mono counter-text" data-text="2.4–9.6x">—</span><span class="pmet-lbl">ROAS Uplift</span></div>
             <div class="pmet"><span class="pmet-val mono counter-num" data-count="28" data-suffix="%">0</span><span class="pmet-lbl">vs. Baseline</span></div>
             <div class="pmet"><span class="pmet-val mono counter-text" data-text="$500K+">—</span><span class="pmet-lbl">Annual Impact</span></div>
-         <div class="proj-footer">
+          </div>
+        </div>
+        <div class="proj-footer">
           <a class="proj-link-muted" href="https://github.com/ujwalatripurana/causal-uplift-modelling" target="_blank" onclick="event.stopPropagation()">
-          GitHub
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17L17 7M7 7h10v10"/></svg>
+            GitHub <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17L17 7M7 7h10v10"/></svg>
           </a>
           <a class="proj-link" href="causal-uplift.html" onclick="event.stopPropagation()">
-          View Case Study
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17L17 7M7 7h10v10"/></svg>
+            View Case Study <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17L17 7M7 7h10v10"/></svg>
           </a>
-          </div>
-        </article>
+        </div>
+      </article>
 
-        <article class="proj-card fade-up" style="position:relative;cursor:pointer" onclick="window.location='crime-hotspot.html'">
+      <article class="proj-card fade-up" style="position:relative;cursor:pointer" onclick="window.location='crime-hotspot.html'">
+        <div class="proj-body">
           <div class="proj-top">
             <span class="proj-domain-badge">Geospatial AI</span>
           </div>
@@ -1398,22 +1402,22 @@ footer {
             <div class="pmet"><span class="pmet-val mono counter-text" data-text="100K+">—</span><span class="pmet-lbl">Records</span></div>
             <div class="pmet"><span class="pmet-val mono counter-num" data-count="87" data-suffix="%">0</span><span class="pmet-lbl">Accuracy</span></div>
             <div class="pmet"><span class="pmet-val mono counter-text" data-text="0.84">—</span><span class="pmet-lbl">F1 Score</span></div>
-          <div class="proj-footer">
-            <a class="proj-link-muted" href="https://github.com/ujwalatripurana/crime-hotspot-ml" target="_blank" onclick="event.stopPropagation()">
-            GitHub
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17L17 7M7 7h10v10"/></svg>
-            </a>
-            <a class="proj-link" href="crime-hotspot.html" onclick="event.stopPropagation()">
-            View Case Study
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17L17 7M7 7h10v10"/></svg>
-            </a>
           </div>
-        </article>
+        </div>
+        <div class="proj-footer">
+          <a class="proj-link-muted" href="https://github.com/ujwalatripurana/crime-hotspot-ml" target="_blank" onclick="event.stopPropagation()">
+            GitHub <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17L17 7M7 7h10v10"/></svg>
+          </a>
+          <a class="proj-link" href="crime-hotspot.html" onclick="event.stopPropagation()">
+            View Case Study <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17L17 7M7 7h10v10"/></svg>
+          </a>
+        </div>
+      </article>
 
-      </div>
     </div>
-  </section>
-
+  </div>
+</section>
+     
   <!-- ==================== SKILLS ==================== -->
   <section id="skills" class="section section-alt">
     <div class="section-wrap">
