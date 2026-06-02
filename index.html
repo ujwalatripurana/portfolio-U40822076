@@ -1641,34 +1641,6 @@ footer {
     draw();
   })();
 
-  // ── Typewriter ────────────────────────────────────────────────────────────
-  (function () {
-    const phrases = [
-      'I find meaning in data others miss.',
-      'I build systems that catch issues in real time.',
-      'I translate ML into decisions that matter.',
-      'Obsessed with why the numbers do not add up',
-      'Turning ambiguity into something you can act on.',
-    ];
-    const el = document.getElementById('typewriter-text');
-    let pi = 0, ci = 0, deleting = false;
-
-    function tick() {
-      const phrase = phrases[pi];
-      if (!deleting) {
-        el.textContent = phrase.slice(0, ci + 1);
-        ci++;
-        if (ci === phrase.length) { deleting = true; return setTimeout(tick, 2200); }
-      } else {
-        el.textContent = phrase.slice(0, ci - 1);
-        ci--;
-        if (ci === 0) { deleting = false; pi = (pi + 1) % phrases.length; }
-      }
-      setTimeout(tick, deleting ? 38 : 72);
-    }
-    tick();
-  })();
-
   // ── Intersection Observer: fade-up ─────────────────────────────────────────
   const fadeObs = new IntersectionObserver(entries => {
     entries.forEach(e => {
